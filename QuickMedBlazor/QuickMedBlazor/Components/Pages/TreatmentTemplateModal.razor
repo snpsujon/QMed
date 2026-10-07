@@ -1,0 +1,51 @@
+﻿<div class="modal-overlayfuck" style="@(IsVisible ? "display: block;" : "display: none;")" @onclick="CloseModal">
+    <div class="modal-contentfuck" @onclick:stopPropagation>
+        <span class="close" @onclick="CloseModal">&times;</span>
+        @ChildContent
+    </div>
+</div>
+
+<style>
+    .modal-overlayfuck {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -38%);
+        width: auto;
+        height: auto;
+        /* background-color: darkgray; */
+        border:2px solid black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-contentfuck {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        position: relative;
+        width: auto;
+        max-width: 80vw;
+        max-height:100vh;
+        overflow-y: auto;
+    }
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        font-size: 18px;
+    }
+</style>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+    private void CloseModal()
+    {
+        IsVisible = false;
+        IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+}

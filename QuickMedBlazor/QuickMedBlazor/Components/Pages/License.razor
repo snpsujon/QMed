@@ -1,0 +1,271 @@
+﻿@page "/"
+@using QuickMedBlazor.DB
+@using System.Text.Json
+@using QuickMedBlazor.Services
+@inject ApplicationDbContext _dp;
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject DataSyncService ds
+@inject IJSRuntime js
+
+
+
+
+
+<div class="container">
+    @if (isLicenseValid==2)
+    {
+        <style>
+            /* General styling for the body */
+            body {
+                font-family: 'Roboto', sans-serif;
+                background-color: #f4f6f8;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+
+            /* Centering the content and styling the container */
+            .container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+            }
+
+            /* Styling the card */
+            .card {
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                padding: 2rem;
+                width: 100%;
+                max-width: 400px;
+                text-align: center;
+            }
+
+            /* Input field styling */
+            .input-field {
+                width: 100%;
+                padding: 12px;
+                margin-top: 1rem;
+                margin-bottom: 1rem;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 16px;
+                box-sizing: border-box;
+            }
+
+            /* Button styling */
+            .btn-primary {
+                background-color: #007bff;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                width: 100%;
+                transition: background-color 0.3s ease;
+            }
+
+                /* Button hover effect */
+                .btn-primary:hover {
+                    background-color: #0056b3;
+                }
+
+            /* Status message styling */
+            .status-message {
+                margin-top: 1rem;
+                font-size: 14px;
+                color: #333;
+            }
+        </style>
+        <div class="card">
+            <h3>Enter License Key</h3>
+
+            <input type="text" placeholder="Enter License Key" class="input-field" @bind-value=model.LicenseKey />
+            <br />
+            <button class="btn-primary" @onclick="ValidateLicense">Validate License</button>
+
+            <p class="status-message">@StatusMessage</p>
+        </div>
+    }
+    else if (isLicenseValid == 0)
+    {
+
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner"></div>
+        </div>
+    }
+    else
+    {
+        <script>
+            var navlink = document.getElementById('initnavlink');
+            var current = window.location.pathname;
+            navlink.click();
+        </script>
+    }
+</div>
+
+@code {
+    private List<TblLicenseInfo> tblLicenses = new();
+    private TblLicenseInfo model = new();
+    private TblDoctor doctorModel = new();
+    private string StatusMessage = "Please enter your license key.";
+    private int isLicenseValid = 1;
+
+
+    // private async void ValidateLicense()
+    // {
+    //     if (1 == 1)
+    //     {
+    //         model.ExpirationDate = DateTime.Now.AddDays(30);
+    //         model.Id = Guid.NewGuid();
+    //         await App.Database.CreateAsync(model);
+
+    //         StatusMessage = "Congrats! Your License is Approved.";
+    //         isLicenseValid = true;
+
+    //         // Reload page
+    //         NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    //     }
+    // }
+
+    private async Task ValidateLicense()
+    {
+        try
+        {
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // This ignores all certificate validation errors
+            var client = new HttpClient(handler);
+            var modl = new { LicenseKey = model.LicenseKey };
+            var response = await client.PostAsJsonAsync("https://quickmed.snpsujon.me/api/Licence/CheckValidity", modl);
+
+
+            // var response = await HttpClient.PostAsJsonAsync("https://two-latina-las-infants.trycloudflare.com/api/Licence/CheckValidity", new { licenseKey = model.LicenseKey });
+            if (response.IsSuccessStatusCode)
+            {
+                var licenseResponse = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+                if (licenseResponse.Data != null)
+                {
+                    if (licenseResponse.Data.IsValid == 1)
+                    {
+
+                        await App.Database.DeleteTableAsync("TblLicenseInfo");
+                        await App.Database.DeleteTableAsync("TblDoctor");
+
+                        model.ExpirationDate = licenseResponse.Data.ExpirationDate;
+                        model.Id = Guid.NewGuid();  // Consider changing this based on your business logic
+                        await App.Database.CreateAsync(model);  // Assuming CreateAsync handles DB operations
+                        doctorModel = licenseResponse.Data.Doctor;
+                        await App.Database.CreateAsync(doctorModel);  // Assuming CreateAsync handles DB operations
+
+
+                        StatusMessage = "Congrats! Your License is Approved.";
+                        isLicenseValid = 1;
+                        // Reload page
+                        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+                    }
+                    else
+                    {
+                        StatusMessage = "License Key Expired.";
+                    }
+                }
+                else
+                {
+                    StatusMessage = "Invalid License Key.";
+                }
+            }
+            else
+            {
+                StatusMessage = "Failed to validate license. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await js.InvokeVoidAsync("showLoading");
+            tblLicenses = await App.Database.GetTableRowsAsync<TblLicenseInfo>("TblLicenseInfo");
+
+            if (tblLicenses.Count() != 0 && tblLicenses.First().ExpirationDate >= DateTime.Now)
+            {
+                var tt = await ds.IsConnectedToInternet();
+                if (tt)
+                {
+                    var handler = new HttpClientHandler();
+                    handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // This ignores all certificate validation errors
+                    var client = new HttpClient(handler);
+                    var modl = new { LicenseKey = tblLicenses.First().LicenseKey };
+                    var response = await client.PostAsJsonAsync("https://quickmed.snpsujon.me/api/Licence/CheckValidity", modl);
+
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var licenseResponse = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+                        if (licenseResponse.Data != null)
+                        {
+                            if (licenseResponse.Data.IsValid == 1)
+                            {
+                                isLicenseValid = 1;
+                            }
+                            else
+                            {
+                                isLicenseValid = 2;
+                                StatusMessage = "Invalid License Key.";
+                            }
+                        }
+                        else
+                        {
+                            isLicenseValid = 2;
+                            StatusMessage = "Invalid License Key.";
+                        }
+                    }
+                    else
+                    {
+                        isLicenseValid = 2;
+                        StatusMessage = "Failed to validate license. Please try again.";
+                    }
+
+
+
+                }
+                else
+                {
+                    isLicenseValid = 1;
+                }
+
+
+            }
+            else
+            {
+                isLicenseValid = 2;
+            }
+        }
+        catch (Exception ex)
+        {
+            
+            throw;
+        }
+       
+    }
+
+    
+    
+
+}
+
+
+

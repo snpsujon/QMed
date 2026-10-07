@@ -1,0 +1,153 @@
+﻿@inherits LayoutComponentBase
+@using QuickMed.DB
+@using QuickMed.ViewModels
+@using System.Text.Json
+@inject ApplicationDbContext _db;
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@using Microsoft.Maui.Networking;
+
+<div class="page">
+    <main>
+        <article class="content px-4">
+                @Body
+            
+
+        </article>
+    </main>
+</div>
+
+@code {
+    public DotNetObjectReference<MainLayout> ObjectReference { get; private set; }
+    private string currentPage;
+    private TblDoctor doctorModel = new();
+    private List<TblLicenseInfo> tblLicenses = new();
+    private TblLicenseInfo model = new();
+
+
+    private string baseUrl = "https://quickmed.snpsujon.me/api/";
+    //private string baseUrl = "https://localhost:7202/api/";
+    protected override async Task OnInitializedAsync()
+    {
+        tblLicenses = await App.Database.GetTableRowsAsync<TblLicenseInfo>("TblLicenseInfo");
+        if (tblLicenses.Count() != 0 && tblLicenses.First().ExpirationDate >= DateTime.Now)
+        {
+            if (Connectivity.NetworkAccess == NetworkAccess.Internet)
+            {
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // This ignores all certificate validation errors
+                var client = new HttpClient(handler);
+                var modl = new { LicenseKey = tblLicenses.First().LicenseKey };
+                var response = await client.PostAsJsonAsync("https://quickmed.snpsujon.me/api/Licence/CheckValidity", modl);
+                if (response.IsSuccessStatusCode && response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+
+                    var licenseResponse = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+                    if (licenseResponse.Data != null)
+                    {
+                        await App.Database.DeleteTableAsync("TblLicenseInfo");
+                        await App.Database.DeleteTableAsync("TblDoctor");
+                        if (licenseResponse.Data.IsValid == 1)
+                        {
+                            model.ExpirationDate = licenseResponse.Data.ExpirationDate;
+                            model.LicenseKey = tblLicenses.First().LicenseKey;
+                            model.Id = Guid.NewGuid();  // Consider changing this based on your business logic
+                            model.SoftVersion = licenseResponse.Data.SoftVersion ?? "1.0.0";
+                            await App.Database.CreateAsync(model);  // Assuming CreateAsync handles DB operations
+                            doctorModel = licenseResponse.Data.Doctor;
+                            await App.Database.CreateAsync(doctorModel);
+                            Navigation.NavigateTo("/dashboard");
+                            @* return "Congrats! Your License is Approved."; *@
+
+                        }
+                        else
+                        {
+                            GotoLoadPage();
+                        }
+                    }
+                    else
+                    {
+                        Navigation.NavigateTo("/dashboard");
+                    }
+                }
+                else
+                {
+                    Navigation.NavigateTo("/dashboard");
+                }
+            }
+            else{
+                Navigation.NavigateTo("/dashboard");
+            }
+
+        }
+        else
+        {
+            // Navigation.NavigateTo("/dashboard");
+            GotoLoadPage();
+        }
+
+    }
+
+    public async Task GotoLoadPage(){
+        ObjectReference = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("setInstanceReferenceForAll", ObjectReference);
+        await JS.InvokeVoidAsync("LoadPage");
+    }
+    [JSInvokable("ValidateLicense")]
+    public async Task<string> ValidateLicense(string license)
+    {
+        var tt = await _db.IsConnectedToInternet();
+        if (tt)
+        {
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // This ignores all certificate validation errors
+            var client = new HttpClient(handler);
+            var modl = new { LicenseKey = license };
+            var response = await client.PostAsJsonAsync($"{baseUrl}Licence/CheckValidity", modl);
+
+            var ClaimedLicense = await client.PostAsJsonAsync($"{baseUrl}Licence/ClaimedLicense", modl);
+            if (response.IsSuccessStatusCode && response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var licenseResponse = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+                if (licenseResponse.Data != null)
+                {
+                    if (licenseResponse.Data.IsValid == 1)
+                    {
+                        await App.Database.DeleteTableAsync("TblLicenseInfo");
+                        await App.Database.DeleteTableAsync("TblDoctor");
+
+                        model.ExpirationDate = licenseResponse.Data.ExpirationDate;
+                        model.LicenseKey = license;
+                        model.Id = Guid.NewGuid();  // Consider changing this based on your business logic
+                        model.SoftVersion = licenseResponse.Data.SoftVersion ?? "1.0.0";
+
+
+
+                        await App.Database.CreateAsync(model);  // Assuming CreateAsync handles DB operations
+                        doctorModel = licenseResponse.Data.Doctor;
+                        await App.Database.CreateAsync(doctorModel);
+                        return "Congrats! Your License is Approved.";
+
+                    }
+                    else
+                    {
+                        return "License Key Expired OR User License Limit Exceeded";
+                    }
+                }
+                else
+                {
+                    return "Invalid License Key.";
+                }
+            }
+            else
+            {
+                return "Failed to validate license. Please try again.";
+            }
+        }
+        else
+        {
+            return "Please Connect to Internet";
+        }
+    }
+
+  }

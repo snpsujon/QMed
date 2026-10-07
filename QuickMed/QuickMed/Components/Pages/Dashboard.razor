@@ -1,0 +1,140 @@
+﻿@page "/dashboard"
+@using QuickMed.BaseComponent
+@inherits BaseDashboard
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-3">
+        <div class="card report-card">
+            <div class="card-body">
+                <div class="row d-flex justify-content-center">
+                    <div class="col">
+                        <p class="text-dark mb-0 fw-semibold" >Total Prescriptions</p>
+
+                    </div>
+                    <div class="col-auto align-self-center">
+                        <a href="prescription-list">
+                            <i data-feather="clock" class="fw-bold align-self-center text-primary icon-sm cursor-pointer">@dashboards.TotalPrescription</i>
+                        </a>
+                    </div>
+                </div>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+    <div class="col-md-6 col-lg-3">
+        <div class="card report-card">
+            <div class="card-body">
+                <div class="row d-flex justify-content-center">
+                    <div class="col">
+                        <p class="text-dark mb-0 fw-semibold">Total Patient</p>
+                    </div>
+                    <div class="col-auto align-self-center">
+                        <a href="appoinment">
+                            <i data-feather="clock" class="fw-bold align-self-center text-primary icon-sm cursor-pointer">@dashboards.TotalPatient</i>
+                            </a>
+                    </div>
+                </div>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+    <div class="col-md-6 col-lg-3">
+        <div class="card report-card">
+            <div class="card-body">
+                <div class="row d-flex justify-content-center">
+                    <div class="col">
+                        <p class="text-dark mb-0 fw-semibold">Total Medicine</p>
+                    </div>
+                    <div class="col-auto align-self-center">
+                        <a href="drug">
+                            <i data-feather="clock" class="fw-bold align-self-center text-primary icon-sm cursor-pointer">@dashboards.TotalMedicine</i>
+                        </a>
+                    </div>
+                </div>
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+    @*<div class="col-md-6 col-lg-3">
+            <div class="card report-card">
+                <div class="card-body">
+                    <div class="row d-flex justify-content-center">
+                        <div class="col">
+                            <p class="text-dark mb-0 fw-semibold">Total Null </p>
+
+                        </div>
+                        <div class="col-auto align-self-center">
+                            <i data-feather="clock" class="fw-bold align-self-center text-primary icon-sm cursor-pointer">5</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+</div><!--end row-->
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-info ">
+                <h4 class="card-title text-light"> <i class="dripicons-view-list"></i> &nbsp;&nbsp;Most Used dX list</h4>
+            </div><!--end card-header-->
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-8">
+                        <span class="fw-bold"> Dx Name </span>
+                    </div>
+                    <div class="col-4">
+                        <span class="fw-bold"> Total Prescription </span>
+                    </div>
+                </div>
+                @foreach (var item in dxs)
+                {
+                    <div class="row">
+                        <div class="col-8 border">
+                            <span> @item.Name </span>
+                        </div>
+                        <div class="col-4 border">
+                            <span> @item.TotalPrescription </span>
+                        </div>
+                    </div>
+                }
+
+            </div><!--end card-body-->
+        </div><!--end card-->
+    </div> <!--end col-->
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-info ">
+                <h4 class="card-title text-light"> <i class="dripicons-view-list"></i> &nbsp;&nbsp;Most Used Medicine</h4>
+            </div><!--end card-header-->
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-4">
+                        <span class="fw-bold"> Brand Name </span>
+                    </div>
+                    <div class="col-4">
+                        <span class="fw-bold"> Generic Name </span>
+                    </div>
+                    <div class="col-4">
+                        <span class="fw-bold"> Company Name </span>
+                    </div>
+                </div>
+                @foreach (var item in brands)
+                {
+                    <div class="row">
+                        <div class="col-4 border">
+                            <span> @item.BrandName </span>
+                        </div>
+                        <div class="col-4 border">
+                            <span> @item.GenericName </span>
+                        </div>
+                        <div class="col-4 border">
+                            <span> @item.CompanyName </span>
+                        </div>
+                    </div>
+                }
+
+            </div><!--end card-body-->
+
+        </div><!--end card-->
+    </div> <!--end col-->
+</div><!--end row-->

@@ -1,0 +1,1653 @@
+﻿
+@using QuickMedBlazor.DB
+@using QuickMedBlazor.ViewModels
+@inject IJSRuntime JS
+@using System;
+
+
+@* @page "/Preeeee" *@
+<div id="JuwelKadu" class="modal-overlay" style="@(IsVisible ? "display: block;" : "display: none;")" @onclick="CloseModal">
+    <div class="modal-content" @onclick:stopPropagation>
+        <span class="close" @onclick="CloseModal">&times;</span>
+        <span class="print" @onclick="PrintContent" title="Print">&#128424;</span> <!-- Print icon -->
+        <br />
+        <hr style="border:1px solid red" />
+        <table id="master_table">
+            <thead>
+                <tr>
+                    <th>
+                        @if (IsWithHeader == 1)
+                        {
+                            <div class="header-1" id="header-1" style="background: rgb(233, 233, 233);">
+                                <div id="sub-h-1">
+                                    <div class="h-line-1">@previewData.TblDoctor.Name</div>
+                                    <div class="h-line-2">@previewData.TblDoctor.designation</div>
+                                    <div class="h-line-3">@previewData.TblDoctor.department</div>
+                                    <div class="h-line-5">@previewData.TblDoctor.passedMedical</div>
+                                    <div class="h-line-6">BMDC Reg. No- @previewData.TblDoctor.bmdcRegNo</div>
+                                </div>
+                                <div id="sub-h-2">
+                                    <div class="h-line-7">Chember:</div>
+                                    <div class="h-line-8">@previewData.TblDoctor.chemberHospital</div>
+                                    <div class="h-line-9">@previewData.TblDoctor.Address</div>
+                                    <div class="h-line-10">Mobile: @previewData.TblDoctor.phoneNumber</div>
+                                    <div class="h-line-11">Visit Time @previewData.TblDoctor.startTTime - @previewData.TblDoctor.endTime</div>
+                                    <div class="h-line-12">@previewData.TblDoctor.offDay Off</div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="header-1"
+                                 id="header-1"
+                                 style="">
+                                <div id="sub-h-1">
+                                </div>
+                                <div id="sub-h-2">
+                                </div>
+                            </div>
+                        }
+
+
+                        
+
+                        <div id="header-2">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><b>Name</b></td>
+                                        <td>:</td>
+                                        <td>&nbsp;@previewData.Name</td>
+                                        <td><b>Age</b></td>
+                                        <td>:</td>
+                                        <td>&nbsp;@previewData.Age</td>
+                                        <td><b>Sex</b></td>
+                                        <td>:</td>
+                                        <td>@previewData.Gender</td>
+                                        <td><b>Date</b></td>
+                                        <td>:</td>
+                                        <td>&nbsp;@previewData.PrescriptionDate?.ToString("dd/MM/yyyy hh:mm tt")</td>
+
+                                    </tr>
+                                    <tr>
+                                        <td><b>Address</b></td>
+                                        <td>:</td>
+                                        <td>&nbsp;@previewData.Address</td>
+                                        <td><b>Reg. No</b></td>
+                                        <td>:</td>
+                                        <td>&nbsp;@previewData.PrescriptionCode</td>
+                                        <td>@* <b>Wt.</b> *@</td>
+                                        <td>@* : *@</td>
+                                        <td></td>
+                                        <td><b>Mobile</b></td>
+                                        <td>:</td>
+                                        <td>&nbsp;@previewData.Mobile</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+
+                        <div id="header-3">
+                            <div id="pres-bd-l">
+                                <svg class="h-line-barcode" id="hugamara" style="width:100%"></svg>
+                                <div class="pr_visit_no"></div>
+                                <div class="pres-cc-ttle">
+                                    <u>C/C</u>
+                                </div>
+                                <div class="pres-cc-bdy">
+                                    @previewData.CC
+                                </div>
+
+                                <div class="pres-cc-ttle-2">
+                                    <u>O/E</u>
+                                </div>
+
+                                <div class="pres-cc-bdy-2">
+                                    <b>@previewData.OE</b><br />
+                                </div>
+
+                                <div class="pres-cc-ttle-3">
+                                    <u>Advice</u>
+                                </div>
+
+                                <div class="pres-cc-bdy-3">@previewData.IX</div>
+
+                                <div class="pres-dx-ttle-1">∆ @previewData.Dx</div>
+                            </div>
+
+                            <div id="pres-bd-r">
+                                <div class="pres-rx-t">Rx.</div>
+                                <div class="pres-rx-bdy">
+                                    @((MarkupString)previewData.PrescriptionDetails)
+                                    <br><br><br><br>
+                                    <b>উপদেশঃ</b><br>
+                                    @previewData.Advice<br><br>
+                                    <asben>** @previewData.NumberAfter @(previewData.ISDayAfter == true ? "দিন" : "মাস") পর আসবেন।</asben>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+            @if (IsWithHeader == 1)
+            {
+                <tfoot>
+                    <tr>
+                        <td>
+                            <div class="header-4" id="header-4"></div>
+                        </td>
+                    </tr>
+                    <div class="header-4" id="header-4" style="background: rgb(233, 233, 233);">
+                        নিয়ম মাফিক ঔষধ খাবেন। ডাক্তারের পরামর্শ ব্যতীত ঔষধ পরিবর্তন নিষেধ।
+                    </div>
+                </tfoot>
+            }
+            else
+            {
+                <tfoot>
+                   
+                    <div class="header-4" id="header">
+                        
+                    </div>
+                </tfoot>
+            }
+
+        </table>
+        
+
+        @if (isPrint)
+        {
+            <!-- Print Button -->
+            <div class="print-button-container">
+                <button @onclick="PrintContent" class="print-button">Print</button>
+            </div>
+        }
+        
+    </div>
+</div>
+
+<!-- JavaScript to handle printing -->
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public bool isPrint { get; set; } = false;
+    [Parameter] public int IsWithHeader { get; set; } = 0;
+    [Parameter] public PerviewPresVM previewData { get; set; } = new PerviewPresVM();
+    // [Parameter] public TblDoctor TblDoctor { get; set; } = new TblDoctor();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JS.InvokeVoidAsync("showBarcode", previewData.PrescriptionCode);
+        // if (firstRender)
+        // {
+        //     await JS.InvokeVoidAsync("showBarcode");
+        // }
+    }
+
+    private void CloseModal()
+    {
+        IsVisible = false;
+        IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+
+    private string GetDownloadsFolderPath()
+    {
+        // Start by assuming Windows-style paths
+        string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Downloads";
+
+        // Adjust for macOS
+        if (OperatingSystem.IsMacOS())
+        {
+            folderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/Downloads";
+        }
+
+        return folderPath;
+    }
+    private async Task OpenPdfFile(string filePath)
+    {
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                await Launcher.OpenAsync(new OpenFileRequest
+                    {
+                        File = new ReadOnlyFile(filePath)
+                    });
+            }
+            else
+            {
+                Console.WriteLine("File does not exist: " + filePath);
+                // Implement user notification or logging
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while opening the file: " + ex.Message);
+            // Implement additional error handling logic appropriate for your application
+        }
+    }
+
+
+    private async void PrintContent()
+    {
+        // try
+        // {
+            
+
+
+
+        // }catch(Exception ex)
+        // {
+        //     Console.WriteLine("An error occurred while printing the content: " + ex.Message);
+        // }
+        // finally
+        // {
+        //     // Assuming converter needs to be disposed - check actual implementation
+            
+        // }
+
+    
+
+
+
+
+        // JavaScript to print the content inside the modal
+         // JS.InvokeVoidAsync("printModalContent");
+      var platform = Microsoft.Maui.Devices.DeviceInfo.Platform;
+
+        if (platform == Microsoft.Maui.Devices.DevicePlatform.WinUI)
+        {
+            // Call the JavaScript function for Windows
+             JS.InvokeVoidAsync("printModalContent");
+        }
+        else if (platform == Microsoft.Maui.Devices.DevicePlatform.MacCatalyst)
+        {
+            // Call a different JavaScript function for macOS
+             JS.InvokeVoidAsync("printModalContentForMac");
+        }
+
+
+
+    }
+}
+
+<!-- Adding custom JavaScript -->
+<script>
+
+    function getHtml(){
+        debugger;
+        var content = document.querySelector('#master_table').innerHTML;
+        var fucker =`
+                <html>
+                    <head>
+                        <title>Print</title>
+                        <style>
+                            /* Add custom styles here */
+
+
+
+
+
+
+
+    html #JuwelKadu {
+        margin: 0;/* 
+        width: 210mm;
+        height: 297mm; */
+        /*background-color: #fff;*/
+        -webkit-print-color-adjust: exact;
+    }
+
+
+    #d_sync_me {
+        display: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    input[type="button"] {
+        display: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    input[type='button'] {
+        display: none;
+        margin: 0;
+        padding: 0;
+    }
+
+
+
+
+    #sy_brn {
+        display: block;
+        float: left;
+    }
+
+    .chol_pata {
+        text-align: center;
+        padding-bottom: 10px;
+    }
+
+
+    #header-1 {
+        display: block;
+        float: left;
+        width: 210mm;
+        height: 53mm;
+        /*background: #E9E9E9;*/
+        -webkit-print-color-adjust: exact;
+    }
+
+    .header-no-1 {
+        display: block;
+        float: left;
+        width: 210mm;
+        height: 53mm;
+        -webkit-print-color-adjust: exact;
+    }
+
+    #header-2 {
+        border-bottom: 1px solid #000;
+        border-top: 1px solid #000;
+        display: block;
+        float: left;
+        height: 16mm;
+        width: 210mm;
+        text-align: left;
+        -webkit-print-color-adjust: exact;
+    }
+
+        #header-2 table {
+            width: 90%;
+            margin: auto;
+            font-family: "Times New Roman";
+            margin-top: 6px;
+        }
+
+
+    .header-no-2 {
+        display: block;
+        float: left;
+        height: 16mm;
+        width: 210mm;
+        -webkit-print-color-adjust: exact;
+    }
+
+    #header-3 {
+        display: block;
+        float: left;
+        width: 210mm;
+        height: 212mm;
+        -webkit-print-color-adjust: exact;
+    }
+
+    #header-4 {
+        display: block;
+        float: left;
+        width: 210mm;
+        /*background: #e9e9e9;*/
+        height: 9mm;
+        text-align: center;
+        font-family: "Platformian";
+        border-top: 1px solid #000;
+        -webkit-print-color-adjust: exact;
+        line-height: 9mm;
+        page-break-after: always;
+    }
+
+
+    asben {
+        font-weight: bold;
+    }
+
+
+    .header-no-4 {
+        display: block;
+        float: left;
+        width: 210mm;
+        height: 9mm;
+        text-align: center;
+        font-family: "Platformian";
+        -webkit-print-color-adjust: exact;
+    }
+
+    #sub-h-1 {
+        display: inline-block;
+        height: 47mm;
+        margin-left: 11mm;
+        margin-top: 6mm;
+        width: 105mm;
+        text-align: left;
+    }
+
+    #sub-h-2 {
+        display: inline-block;
+        height: 47mm;
+        margin-left: 1mm;
+        margin-top: 6mm;
+        width: 82mm;
+    }
+
+    .h-line-1 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 12pt;
+        height: 5mm;
+        line-height: 11px;
+        width: 105mm;
+    }
+
+    .h-line-2 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 12pt;
+        font-weight: bold;
+        height: 5mm;
+        line-height: 22px;
+        width: 105mm;
+    }
+
+    .h-line-3 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 12pt;
+        height: 5mm;
+        line-height: 20px;
+        width: 105mm;
+        font-weight: normal;
+    }
+
+    .h-line-4 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 12pt;
+        height: 5mm;
+        line-height: 23px;
+        width: 105mm;
+        font-weight: normal;
+    }
+
+    .h-line-5 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 12pt;
+        height: 5mm;
+        line-height: 26px;
+        width: 105mm;
+        font-weight: normal;
+    }
+
+    .h-line-6 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 12pt;
+        height: 5mm;
+        line-height: 35px;
+        width: 105mm;
+        font-weight: normal;
+    }
+
+    .h-line-7 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 12pt;
+        height: 5mm;
+        line-height: 11px;
+        text-align: right;
+        width: 78mm;
+    }
+
+    .h-line-8 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 11pt;
+        height: 5mm;
+        line-height: 11px;
+        text-align: right;
+        width: 78mm;
+        font-weight: normal;
+    }
+
+    .h-line-9 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 11pt;
+        height: 5mm;
+        line-height: 11px;
+        text-align: right;
+        width: 78mm;
+        font-weight: normal;
+    }
+
+    .h-line-10 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 11pt;
+        height: 5mm;
+        line-height: 11px;
+        text-align: right;
+        width: 78mm;
+        font-weight: normal;
+    }
+
+    .h-line-11 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 11pt;
+        height: 5mm;
+        line-height: 11px;
+        text-align: right;
+        width: 78mm;
+        font-weight: normal;
+    }
+
+    .h-line-12 {
+        display: block;
+        float: left;
+        font-family: "Century Gothic","Platformian";
+        font-size: 11pt;
+        height: 5mm;
+        line-height: 11px;
+        text-align: right;
+        width: 78mm;
+        font-weight: normal;
+    }
+
+    .h-line-barcode_top {
+        display: block;
+        float: right;
+        font-size: 12pt;
+        height: 10mm;
+        line-height: 11px;
+        margin-top: 1mm;
+        overflow: hidden;
+        text-align: right;
+        width: 48mm;
+        margin-left: 10mm;
+        margin-right: 4mm;
+        font-family: "IDAutomationHC39M";
+    }
+
+    .h-line-barcode {
+        display: block;
+        float: left;
+        font-size: 13pt;
+        height: 15mm;
+        line-height: 11px;
+        margin-top: 2mm;
+        overflow: hidden;
+        text-align: left;
+        width: 100%;
+        margin-left: 20px;
+        font-family: "IDAutomationHC39M";
+    }
+
+
+    .pr_visit_no {
+        display: block;
+        float: left;
+        margin-left: 10mm;
+        width: 48mm;
+        text-align: left;
+        font-size:30px;
+    }
+
+
+    .top_pr_1_visit_no {
+        display: block;
+        float: right;
+        width: 48mm;
+        margin-right: -11mm;
+    }
+
+
+
+
+
+    #pt-info-row-1 {
+        display: block;
+        float: left;
+        height: 7mm;
+        margin-left: 11mm;
+        width: 190mm;
+        margin-top: 2mm;
+    }
+
+    #pt-info-row-2 {
+        display: block;
+        float: left;
+        height: 7mm;
+        margin-left: 11mm;
+        width: 190mm;
+    }
+
+    .pt-info-ln-1 {
+        display: inline-block;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        font-weight: bold;
+        height: 6mm;
+        width: 18mm;
+    }
+
+    .pt-info-ln-dot-1 {
+        display: inline-block;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        font-weight: bold;
+        height: 6mm;
+        width: 70mm;
+    }
+
+    .pt-info-ln-2 {
+        display: inline-block;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        font-weight: bold;
+        height: 6mm;
+        width: 16mm;
+    }
+
+    .pt-info-ln-dot-2 {
+        display: inline-block;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        font-weight: bold;
+        height: 6mm;
+        width: 28mm;
+    }
+
+    .pt-info-ln-3 {
+        display: inline-block;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        font-weight: bold;
+        height: 6mm;
+        width: 15mm;
+    }
+
+    .pt-info-ln-dot-3 {
+        display: inline-block;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        font-weight: bold;
+        height: 6mm;
+        width: 27mm;
+    }
+
+    #pres-bd-l {
+        border-right: 1px solid #000;
+        display: block;
+        float: left;
+        height: 212mm;
+        width: 73mm;
+    }
+
+    .h_line_text {
+        font-size: 12pt;
+        display: block;
+        float: left;
+        height: 6mm;
+        width: 64mm;
+        text-align: center;
+        margin-right: 4mm;
+        margin-left: 4mm;
+    }
+
+    .pres-bd-no-l {
+        display: block;
+        float: left;
+        height: 212mm;
+        width: 73mm;
+    }
+
+    #pres-bd-r {
+        display: block;
+        float: left;
+        height: 212mm;
+        width: 135mm;
+        page-break-after: always;
+        page-break-inside: avoid;
+    }
+
+    .pres-rx-t {
+        display: block;
+        float: right;
+        font-family: "Times New Roman";
+        font-size: 22pt;
+        font-weight: bold;
+        height: 10mm;
+        width: 129mm;
+    }
+
+    .pres-rx-bdy {
+        display: block;
+        float: right;
+        font-family: "Times New Roman","Platformian";
+        font-size: 12pt;
+        height: 180mm;
+        margin-right: 0mm;
+        margin-top: 5mm;
+        width: 125mm;
+    }
+
+    .asben-rev-1-st {
+        display: block;
+        float: right;
+        font-family: "Times New Roman","Platformian";
+        font-size: 16pt;
+        height: 10mm;
+        margin-right: 7mm;
+        margin-top: 2mm;
+        width: 100mm;
+    }
+
+
+
+    drug_his, pr_his, pst_his, his_edd, his_notes {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        margin-bottom: 15px;
+        margin-left: 37px;
+        width: 54mm;
+        margin-left: 65px;
+    }
+
+    ph11, ph12, ph13, ph14, ph15 {
+        display: block;
+        float: left;
+        font-weight: bold;
+        border-bottom: 1px solid #000;
+    }
+
+
+    his_txt1, his_txt2, his_txt3, his_txt5 {
+        display: block;
+        float: left;
+        width: 100%;
+        margin-top: 5px;
+    }
+
+
+
+    ph16 {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        margin-bottom: 15px;
+        margin-top: 1mm;
+        width: 100%;
+        text-align: left;
+    }
+
+
+    ccgap_1 {
+        min-height: 60px;
+        display: block;
+        float: left;
+        width: 100%;
+    }
+
+
+
+
+    .pres-cc-ttle {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        margin-top: 6mm;
+        width: 62mm;
+        font-weight: bold;
+        margin-left: 65px;
+    }
+
+    .pres-cc-bdy {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        width: 54mm;
+        margin-bottom: 15px;
+        margin-top: 5px;
+        margin-left: 65px;
+    }
+
+
+    .pres-cc-ttle-2 {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        margin-left: 37px;
+        width: 62mm;
+        font-weight: bold;
+        margin-left: 65px;
+    }
+
+    .pres-cc-bdy-2 {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        width: 54mm;
+        margin-bottom: 15px;
+        margin-top: 5px;
+        margin-left: 65px;
+    }
+
+        .pres-cc-bdy-2 table {
+            width: 100%;
+            text-align: left;
+            border-collapse: collapse;
+        }
+
+
+
+    .pres-cc-ttle-3 {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        width: 62mm;
+        font-weight: bold;
+        margin-left: 65px;
+    }
+
+    .pres-cc-bdy-3 {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+        width: 54mm;
+        margin-bottom: 15px;
+        margin-top: 5px;
+        margin-left: 65px;
+    }
+
+
+
+    .pres-dx-ttle-1 {
+        display: block;
+        float: left;
+        font-family: "Times New Roman";
+        font-size: 12pt;
+
+        width: 54mm;
+        margin-bottom: 15px;
+        margin-top: 5px;
+        margin-left: 65px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+
+
+
+                            </style>
+
+                    </head>
+                        <body>${content}</body>
+                </html>
+            `;
+        return fucker;
+
+    }
+    function printModalContent() {
+        debugger;
+
+        const content = document.querySelector('#master_table').innerHTML;
+        debugger;
+        const iframeContainer = document.createElement('div');
+
+        // Create a new iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.border = 'none';
+
+        // Append iframe to the container
+        iframeContainer.appendChild(iframe);
+        document.body.appendChild(iframeContainer);
+
+        // Write the HTML content to the iframe
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <html>
+                <head>
+                    <title>Print</title>
+                    <style>
+                        /* Add custom styles here */
+                        
+                        
+
+
+
+
+
+html #JuwelKadu {
+    margin: 0;
+    width: 210mm;
+    height: 297mm;
+    /*background-color: #fff;*/
+    -webkit-print-color-adjust: exact;
+}
+
+
+#d_sync_me {
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+input[type="button"] {
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+input[type='button'] {
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+
+#sy_brn {
+    display: block;
+    float: left;
+}
+
+.chol_pata {
+    text-align: center;
+    padding-bottom: 10px;
+}
+
+
+#header-1 {
+    display: block;
+    float: left;
+    width: 210mm;
+    height: 53mm;
+    /*background: #E9E9E9;*/
+    -webkit-print-color-adjust: exact;
+}
+
+.header-no-1 {
+    display: block;
+    float: left;
+    width: 210mm;
+    height: 53mm;
+    -webkit-print-color-adjust: exact;
+}
+
+#header-2 {
+    border-bottom: 1px solid #000;
+    border-top: 1px solid #000;
+    display: block;
+    float: left;
+    height: 16mm;
+    width: 210mm;
+    text-align: left;
+    -webkit-print-color-adjust: exact;
+}
+
+    #header-2 table {
+        width: 90%;
+        margin: auto;
+        font-family: "Times New Roman";
+        margin-top: 6px;
+    }
+
+
+.header-no-2 {
+    display: block;
+    float: left;
+    height: 16mm;
+    width: 210mm;
+    -webkit-print-color-adjust: exact;
+}
+
+#header-3 {
+    display: block;
+    float: left;
+    width: 210mm;
+    height: 212mm;
+    -webkit-print-color-adjust: exact;
+}
+
+#header-4 {
+    display: block;
+    float: left;
+    width: 210mm;
+    /*background: #e9e9e9;*/
+    height: 9mm;
+    text-align: center;
+    font-family: "Platformian";
+    border-top: 1px solid #000;
+    -webkit-print-color-adjust: exact;
+    line-height: 9mm;
+    page-break-after: always;
+}
+
+
+asben {
+    font-weight: bold;
+}
+
+
+.header-no-4 {
+    display: block;
+    float: left;
+    width: 210mm;
+    height: 9mm;
+    text-align: center;
+    font-family: "Platformian";
+    -webkit-print-color-adjust: exact;
+}
+
+#sub-h-1 {
+    display: inline-block;
+    height: 47mm;
+    margin-left: 11mm;
+    margin-top: 6mm;
+    width: 105mm;
+    text-align: left;
+}
+
+#sub-h-2 {
+    display: inline-block;
+    height: 47mm;
+    margin-left: 1mm;
+    margin-top: 6mm;
+    width: 82mm;
+}
+
+.h-line-1 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 12pt;
+    height: 5mm;
+    line-height: 11px;
+    width: 105mm;
+}
+
+.h-line-2 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 12pt;
+    font-weight: bold;
+    height: 5mm;
+    line-height: 22px;
+    width: 105mm;
+}
+
+.h-line-3 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 12pt;
+    height: 5mm;
+    line-height: 20px;
+    width: 105mm;
+    font-weight: normal;
+}
+
+.h-line-4 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 12pt;
+    height: 5mm;
+    line-height: 23px;
+    width: 105mm;
+    font-weight: normal;
+}
+
+.h-line-5 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 12pt;
+    height: 5mm;
+    line-height: 26px;
+    width: 105mm;
+    font-weight: normal;
+}
+
+.h-line-6 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 12pt;
+    height: 5mm;
+    line-height: 35px;
+    width: 105mm;
+    font-weight: normal;
+}
+
+.h-line-7 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 12pt;
+    height: 5mm;
+    line-height: 11px;
+    text-align: right;
+    width: 78mm;
+}
+
+.h-line-8 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 11pt;
+    height: 5mm;
+    line-height: 11px;
+    text-align: right;
+    width: 78mm;
+    font-weight: normal;
+}
+
+.h-line-9 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 11pt;
+    height: 5mm;
+    line-height: 11px;
+    text-align: right;
+    width: 78mm;
+    font-weight: normal;
+}
+
+.h-line-10 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 11pt;
+    height: 5mm;
+    line-height: 11px;
+    text-align: right;
+    width: 78mm;
+    font-weight: normal;
+}
+
+.h-line-11 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 11pt;
+    height: 5mm;
+    line-height: 11px;
+    text-align: right;
+    width: 78mm;
+    font-weight: normal;
+}
+
+.h-line-12 {
+    display: block;
+    float: left;
+    font-family: "Century Gothic","Platformian";
+    font-size: 11pt;
+    height: 5mm;
+    line-height: 11px;
+    text-align: right;
+    width: 78mm;
+    font-weight: normal;
+}
+
+.h-line-barcode_top {
+    display: block;
+    float: right;
+    font-size: 12pt;
+    height: 10mm;
+    line-height: 11px;
+    margin-top: 1mm;
+    overflow: hidden;
+    text-align: right;
+    width: 48mm;
+    margin-left: 10mm;
+    margin-right: 4mm;
+    font-family: "IDAutomationHC39M";
+}
+
+.h-line-barcode {
+    display: block;
+    float: left;
+    font-size: 13pt;
+    height: 15mm;
+    line-height: 11px;
+    margin-top: 2mm;
+    overflow: hidden;
+    text-align: left;
+    width: 100%;
+    margin-left: 20px;
+    font-family: "IDAutomationHC39M";
+}
+
+
+.pr_visit_no {
+    display: block;
+    float: left;
+    margin-left: 10mm;
+    width: 48mm;
+    text-align: left;
+    font-size:30px;
+}
+
+
+.top_pr_1_visit_no {
+    display: block;
+    float: right;
+    width: 48mm;
+    margin-right: -11mm;
+}
+
+
+
+
+
+#pt-info-row-1 {
+    display: block;
+    float: left;
+    height: 7mm;
+    margin-left: 11mm;
+    width: 190mm;
+    margin-top: 2mm;
+}
+
+#pt-info-row-2 {
+    display: block;
+    float: left;
+    height: 7mm;
+    margin-left: 11mm;
+    width: 190mm;
+}
+
+.pt-info-ln-1 {
+    display: inline-block;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    font-weight: bold;
+    height: 6mm;
+    width: 18mm;
+}
+
+.pt-info-ln-dot-1 {
+    display: inline-block;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    font-weight: bold;
+    height: 6mm;
+    width: 70mm;
+}
+
+.pt-info-ln-2 {
+    display: inline-block;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    font-weight: bold;
+    height: 6mm;
+    width: 16mm;
+}
+
+.pt-info-ln-dot-2 {
+    display: inline-block;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    font-weight: bold;
+    height: 6mm;
+    width: 28mm;
+}
+
+.pt-info-ln-3 {
+    display: inline-block;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    font-weight: bold;
+    height: 6mm;
+    width: 15mm;
+}
+
+.pt-info-ln-dot-3 {
+    display: inline-block;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    font-weight: bold;
+    height: 6mm;
+    width: 27mm;
+}
+
+#pres-bd-l {
+    border-right: 1px solid #000;
+    display: block;
+    float: left;
+    height: 212mm;
+    width: 73mm;
+}
+
+.h_line_text {
+    font-size: 12pt;
+    display: block;
+    float: left;
+    height: 6mm;
+    width: 64mm;
+    text-align: center;
+    margin-right: 4mm;
+    margin-left: 4mm;
+}
+
+.pres-bd-no-l {
+    display: block;
+    float: left;
+    height: 212mm;
+    width: 73mm;
+}
+
+#pres-bd-r {
+    display: block;
+    float: left;
+    height: 212mm;
+    width: 135mm;
+    page-break-after: always;
+    page-break-inside: avoid;
+}
+
+.pres-rx-t {
+    display: block;
+    float: right;
+    font-family: "Times New Roman";
+    font-size: 22pt;
+    font-weight: bold;
+    height: 10mm;
+    width: 129mm;
+}
+
+.pres-rx-bdy {
+    display: block;
+    float: right;
+    font-family: "Times New Roman","Platformian";
+    font-size: 12pt;
+    height: 180mm;
+    margin-right: 0mm;
+    margin-top: 5mm;
+    width: 125mm;
+}
+
+.asben-rev-1-st {
+    display: block;
+    float: right;
+    font-family: "Times New Roman","Platformian";
+    font-size: 16pt;
+    height: 10mm;
+    margin-right: 7mm;
+    margin-top: 2mm;
+    width: 100mm;
+}
+
+
+
+drug_his, pr_his, pst_his, his_edd, his_notes {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    margin-bottom: 15px;
+    margin-left: 37px;
+    width: 54mm;
+    margin-left: 65px;
+}
+
+ph11, ph12, ph13, ph14, ph15 {
+    display: block;
+    float: left;
+    font-weight: bold;
+    border-bottom: 1px solid #000;
+}
+
+
+his_txt1, his_txt2, his_txt3, his_txt5 {
+    display: block;
+    float: left;
+    width: 100%;
+    margin-top: 5px;
+}
+
+
+
+ph16 {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    margin-bottom: 15px;
+    margin-top: 1mm;
+    width: 100%;
+    text-align: left;
+}
+
+
+ccgap_1 {
+    min-height: 60px;
+    display: block;
+    float: left;
+    width: 100%;
+}
+
+
+
+
+.pres-cc-ttle {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    margin-top: 6mm;
+    width: 62mm;
+    font-weight: bold;
+    margin-left: 65px;
+}
+
+.pres-cc-bdy {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    width: 54mm;
+    margin-bottom: 15px;
+    margin-top: 5px;
+    margin-left: 65px;
+}
+
+
+.pres-cc-ttle-2 {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    margin-left: 37px;
+    width: 62mm;
+    font-weight: bold;
+    margin-left: 65px;
+}
+
+.pres-cc-bdy-2 {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    width: 54mm;
+    margin-bottom: 15px;
+    margin-top: 5px;
+    margin-left: 65px;
+}
+
+    .pres-cc-bdy-2 table {
+        width: 100%;
+        text-align: left;
+        border-collapse: collapse;
+    }
+
+
+
+.pres-cc-ttle-3 {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    width: 62mm;
+    font-weight: bold;
+    margin-left: 65px;
+}
+
+.pres-cc-bdy-3 {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    width: 54mm;
+    margin-bottom: 15px;
+    margin-top: 5px;
+    margin-left: 65px;
+}
+
+
+
+.pres-dx-ttle-1 {
+    display: block;
+    float: left;
+    font-family: "Times New Roman";
+    font-size: 12pt;
+    
+    width: 54mm;
+    margin-bottom: 15px;
+    margin-top: 5px;
+    margin-left: 65px;
+    text-align: center;
+    font-weight: bold;
+}
+
+
+
+
+                        </style>
+
+                </head>
+                    <body>${content}</body>
+            </html>
+        `);
+        doc.close();
+
+        // Print the content of the iframe
+        iframe.onload = function () {
+            iframe.contentWindow.print();
+            document.body.removeChild(iframeContainer); // Clean up after printing
+        };
+    }
+    function showBarcode(data){
+        
+        $("#hugamara").JsBarcode(data, {
+            width: 4,
+            height: 60,
+            fontSize: 20,
+            margin: 0
+        });
+    
+    }
+</script>
+
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -38%);
+        width: 100%;
+        height:70%;
+        @* background: rgba(0, 0, 0, 0.5); *@
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000; 
+       
+    }
+
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        width: 250mm;
+        max-height: 88vh;
+        overflow-y: auto;
+        position: relative;
+        
+    }
+
+    .close, .print {
+        position: absolute;
+        top: 10px;
+        font-size: 36px; /* Adjusted for better visual balance */
+        cursor: pointer;
+        color: #333; /* Adjust color as needed */
+    }
+
+    .close {
+        right: 10px;
+        color: red;
+    }
+
+    .print {
+        right: 50px; /* Adjust spacing to ensure it does not overlap the close icon */
+        color: #000; /* Print icon color */
+        font-weight:bold;
+    }
+
+
+    .print-button-container {
+        margin-top: 20px;
+        text-align: right;
+    }
+
+    .print-button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+
+</style>

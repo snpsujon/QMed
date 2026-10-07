@@ -1,0 +1,17 @@
+{
+  "name": "quickmedblazor",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "ckeditor5-build-classic": "^1.0.0",
+    "quill": "^2.0.2",
+    "sweetalert2": "^11.14.4"
+  }
+}

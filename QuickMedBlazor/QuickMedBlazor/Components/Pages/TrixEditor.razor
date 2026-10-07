@@ -1,0 +1,30 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div id="trix-editor-container">
+    <trix-editor input="trix-editor" id="trix-editor"></trix-editor>
+    <input type="hidden" id="trix-editor-hidden" value="@Content" />
+</div>
+
+@code {
+    [Parameter]
+    public string Content { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ContentChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Initialize Trix
+            await JSRuntime.InvokeVoidAsync("initializeTrixEditor");
+        }
+    }
+
+    [JSInvokable]
+    public async Task UpdateContent(string content)
+    {
+        Content = content;
+        await ContentChanged.InvokeAsync(Content);
+    }
+}

@@ -1,0 +1,566 @@
+﻿@page "/Drug"
+@using QuickMedBlazor.DB
+@inject ApplicationDbContext _dp;
+@inject IJSRuntime JSRuntime;
+
+<style>
+    /* Styling the main container */
+    .Drug-Section {
+        width: 250px; /* Set the width of the sidebar */
+        background-color: #f5f5f5; /* Light background color for the sidebar */
+        padding: 20px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Adding a subtle shadow */
+    }
+
+    .sidebar-Section {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .sidebar-item {
+        padding: 10px;
+        background-color: #A1045A;
+        color: white;
+        font-size: 16px;
+        text-align: center;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .sidebar-item.active {
+            background-color: #008000; /* Slightly darker shade for active item */
+        }
+
+        .sidebar-item:hover {
+            background-color: #80053f; /* Darker shade for hover effect */
+        }
+
+    .modal {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 60%;
+        max-width: 500px;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        font-size: 1.5rem;
+    }
+
+    .input-fields {
+        display: flex;
+        margin-bottom: 15px;
+        width: 100%;
+        margin-top:25px;
+    }
+
+        .input-fields input {
+            flex: 1;
+        }
+
+
+    .button-container {
+        display: flex;
+        justify-content: flex-end; /* Aligns button to the right */
+        margin-top: auto; /* Pushes the button to the bottom */
+    }
+
+    .button-box {
+        margin-top: 20px;
+    }
+
+    .main-section{
+        display:flex;
+        
+    }
+
+    .card{
+        width:100%;
+    }
+
+    .temp-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .Header {
+        text-align: center;
+    }
+
+
+
+</style>
+<div class="main-section">
+    <div class="Drug-Section">
+        <div class="sidebar-Section">
+            <div class="sidebar-item @(activeItem == "Company" ? "active" : "")" @onclick="@(() => changeSideBar("Company"))">Company</div>
+            <div class="sidebar-item @(activeItem == "Generic" ? "active" : "")" @onclick="@(() => changeSideBar("Generic"))">Generic</div>
+            <div class="sidebar-item @(activeItem == "Brand" ? "active" : "")" @onclick="@(() => changeSideBar("Brand"))">Brand</div>
+        </div>
+
+    </div>
+    @if (companyShow)
+    {
+        <div class="card">
+            <div class="temp-header">
+                <h3>Company</h3>
+                <div class="button-container">
+                    <button @onclick="OpenModal">
+                        <span class="icon">💾</span> Add New
+                    </button>
+                </div>
+            </div>
+
+            @if (companies.Any())
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Actions</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in companies)
+                        {
+                            <tr>
+                                <td>
+                                    <button @onclick="() => EditCompany(item)" class="icon-button" title="Edit">
+                                        <span class="icon">✏️</span>
+                                    </button>
+                                    <button @onclick="() => DeleteCompany(item)" class="icon-button" title="Delete">
+                                        <span class="icon">🗑️</span>
+                                    </button>
+                                </td>
+                                <td>@item.Name</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <center><em>No Data Available</em></center>
+            }
+        </div>
+    }
+    @if (genericShow)
+    {
+        <div class="card">
+            <div class="temp-header">
+                <h3>Generic</h3>
+                <div class="button-container">
+                    <button @onclick="showModalG">
+                        <span class="icon">💾</span> Add New
+                    </button>
+                </div>
+            </div>
+
+            @if (generics.Any())
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Actions</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in generics)
+                        {
+                            <tr>
+                                <td>
+                                    <button @onclick="() => EditGeneric(item)" class="icon-button" title="Edit">
+                                        <span class="icon">✏️</span>
+                                    </button>
+                                    <button @onclick="() => DeleteGeneric(item)" class="icon-button" title="Delete">
+                                        <span class="icon">🗑️</span>
+                                    </button>
+                                </td>
+                                <td>@item.Name</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <center><em>No Data Available</em></center>
+            }
+        </div>
+    }
+    @if (brandShow)
+    {
+        <div class="card">
+            <div class="temp-header">
+                <h3 class="Header">Brand</h3>
+                <div class="button-container">
+                    <button @onclick="OpenModalB">
+                        <span class="icon">💾</span> Add New
+                    </button>
+                </div>
+            </div>
+
+            @if (brands.Any())
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Actions</th>
+                            <th>Name</th>
+                            <th>Company Name</th>
+                            <th>Generic Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in brands)
+                        {
+                            <tr>
+                                <td>
+                                    <button @onclick="() => EditBrand(item)" class="icon-button" title="Edit">
+                                        <span class="icon">✏️</span>
+                                    </button>
+                                    <button @onclick="() => DeleteBrand(item)" class="icon-button" title="Delete">
+                                        <span class="icon">🗑️</span>
+                                    </button>
+                                </td>
+                                <td>@item.Name</td>
+                                <td>@item.CompanyName</td>
+                                <td>@item.GenericName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <center><em>No Data Available</em></center>
+            }
+        </div>
+    }
+
+</div>
+
+
+@if (showModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModal">&times;</span>
+            <div class="input-section">
+                <div class="input-fields">
+                    <!-- Hidden Id input for updates -->
+                    <input type="hidden" @bind="model.Id" />
+
+                    <input type="text" placeholder="Name" @bind="model.Name" required/>
+                </div>
+                <hr />
+                <div class="button-container">
+                    <button @onclick="SaveCompany" disabled="@string.IsNullOrWhiteSpace(model.Name)">
+                        <span class="icon">💾</span>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+@if (showModalGeneric)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModalG">&times;</span>
+            <div class="input-Section">
+                <div class="input-fields">
+                    <input type="text" placeholder="Name" @bind-value=modelG.Name />
+                </div>
+                <hr />
+                <div class="button-container">
+                    <button @onclick="SaveGeneric">
+                        <span class="icon">💾</span>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showModalBrand)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModalB">&times;</span>
+            <div class="input-Section">
+                <div class="input-fields">
+                    <input type="text" placeholder="Name" @bind-value=modelB.Name />
+                </div>
+                <div class="input-fields">
+                    <select id="companySelect" @bind=modelB.CompanyId>
+                        <option value="">Select Company</option>
+                        @foreach (var item in companies)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="input-fields">
+                    <select id="genericSelect" @bind=modelB.GenericId>
+                        <option value="">Select Generic</option>
+                        @foreach (var item in generics)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <hr />
+                <div class="button-container">
+                    <button @onclick="SaveBrand">
+                        <span class="icon">💾</span>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+
+    private List<TblCompany> companies = new();
+    private TblCompany model = new();
+    private List<TblGeneric> generics = new();
+    private TblGeneric modelG = new();
+    private List<TblBrand> brands = new();
+    private TblBrand modelB = new();
+    private bool companyShow = true;
+    private bool genericShow = false;
+    private bool brandShow = false;
+    private string activeItem = "Company"; // Default active item
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            generics = new();
+            generics = await App.Database.GetTableRowsAsync<TblGeneric>("TblGeneric");
+
+            companies = new();
+            companies =await App.Database.GetTableRowsAsync<TblCompany>("TblCompany");
+
+            brands = new();
+            string sql = $"SELECT tb.*, tg.Name as GenericName, tc.Name as CompanyName FROM TblBrand tb LEFT JOIN TblGeneric tg on tg.Id = tb.GenericId LEFT JOIN TblCompany tc on tc.Id = tb.CompanyId";
+            brands = (await _dp.ExecuteSqlQueryAsync<TblBrand>(sql)).ToList();
+
+
+
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+
+    }
+
+    private void EditCompany(TblCompany company)
+    {
+        OpenModal();
+        model = company; 
+    }
+    private void EditGeneric(TblGeneric generic)
+    {
+        showModalG();
+        modelG = generic;
+    }
+    private void EditBrand(TblBrand brand)
+    {
+        OpenModalB();
+        modelB = brand;
+    }
+    private void changeSideBar(string val)
+    {
+        activeItem = val; // Set active item
+        companyShow = val == "Company";
+        genericShow = val == "Generic";
+        brandShow = val == "Brand";
+    }
+
+    private async void DeleteCompany(TblCompany company)
+    {
+        bool isConfirmed = await JSRuntime.InvokeAsync<bool>("showDeleteConfirmation", "Delete", "Are you sure you want to delete this record?");
+
+        if (isConfirmed)
+        {
+            var deleteResult = await _dp.DeleteAsync(company);
+
+            if (deleteResult == 1)
+            {
+                await OnInitializedAsync();
+                StateHasChanged();
+            }
+            else
+            {
+                // Handle the failure case, e.g., show an error message
+                Console.WriteLine("Failed to delete  from the database.");
+            }
+        }
+    }
+
+    private async void DeleteGeneric(TblGeneric generic)
+    {
+        bool isConfirmed = await JSRuntime.InvokeAsync<bool>("showDeleteConfirmation", "Delete", "Are you sure you want to delete this record?");
+
+        if (isConfirmed)
+        {
+            var deleteResult = await _dp.DeleteAsync(generic);
+
+            if (deleteResult == 1)
+            {
+                await OnInitializedAsync();
+                StateHasChanged();
+            }
+            else
+            {
+                // Handle the failure case, e.g., show an error message
+                Console.WriteLine("Failed to delete  from the database.");
+            }
+        }
+    }
+    private async void DeleteBrand(TblBrand brand)
+    {
+        bool isConfirmed = await JSRuntime.InvokeAsync<bool>("showDeleteConfirmation", "Delete", "Are you sure you want to delete this record?");
+
+        if (isConfirmed)
+        {
+            var deleteResult = await _dp.DeleteAsync(brand);
+
+            if (deleteResult == 1)
+            {
+                await OnInitializedAsync();
+                StateHasChanged();
+            }
+            else
+            {
+                // Handle the failure case, e.g., show an error message
+                Console.WriteLine("Failed to delete  from the database.");
+            }
+        }
+    }
+    private async Task SaveCompany()
+    {
+        if (model.Id == Guid.Empty) // Check if the GUID is uninitialized
+        {
+            model.Id = Guid.NewGuid(); // This line will be redundant as the default is already set
+            await _dp.CreateAsync(model); // Create the new company
+        }
+        else
+        {
+            model.IsSynced = false;
+            await _dp.UpdateAsync(model); // Update the existing company
+        }
+
+        // Reset the model for future input
+        model = new TblCompany(); // Creates a new instance with a new GUID
+        CloseModal();
+        await OnInitializedAsync(); // Ensure data is refreshed
+        StateHasChanged(); // Update the UI
+    }
+
+    private async void SaveGeneric()
+    {
+        var name = modelG.Name;
+        if (model.Id == Guid.Empty)
+        {
+            modelG.Id = Guid.NewGuid();
+            var res = _dp.CreateAsync(modelG);
+        }
+        else
+        {
+            modelG.IsSynced = false;
+            await _dp.UpdateAsync(modelG);
+        }
+        modelG = new TblGeneric();
+        CloseModalG();
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    private async void SaveBrand()
+    {
+        var name = modelB.Name;
+        if (modelB.Id == Guid.Empty)
+        {
+            modelB.Id = Guid.NewGuid();
+            var res = _dp.CreateAsync(modelB);
+        }
+        else
+        {
+            modelB.IsSynced = false;
+            await _dp.UpdateAsync(modelB);
+        }
+        modelB = new TblBrand();
+        CloseModalB();
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    private bool showModal = false;
+    private bool showModalGeneric = false;
+    private bool showModalBrand = false;
+
+    private void OpenModal()
+    {
+        showModal = true; // Open the modal
+    }
+    private void showModalG()
+    {
+        showModalGeneric = true; // Open the modal
+    }
+    private void OpenModalB()
+    {
+        showModalBrand = true; // Open the modal
+    }
+
+
+    private void CloseModal()
+    {
+        showModal = false; // Close the modal
+    }
+    private void CloseModalG()
+    {
+        showModalGeneric = false; // Close the modal
+    }
+    private void CloseModalB()
+    {
+        showModalBrand = false; // Close the modal
+    }
+}

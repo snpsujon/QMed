@@ -1,0 +1,742 @@
+﻿@page "/pp"
+
+@using QuickMedBlazor.DB
+@using System.Text.Json
+@using QuickMedBlazor.ViewModels
+@using Helpers.HtmlToPdf;
+@inject ApplicationDbContext _dp;
+@inject IJSRuntime JSRuntime;
+
+<meta charset="UTF-8">
+
+<div class="appointment-section">
+    <div class="input-fields">
+        <input type="text" placeholder="Name" @bind-value="model.Name" />
+        <input type="text" placeholder="Age" @bind-value="model.Age" />
+        @* <select @bind=model.Gender>
+            <option value="" disabled="disabled" selected="selected"> Select Gender</option>
+            <option value="1">Male</option>
+            <option value="2">Female</option>
+            <option value="3">Other</option>
+        </select> *@
+        <select id="genderSelect" @bind=model.Gender>
+            <option value="">Select Gender</option>
+            <option value="1">Male</option>
+            <option value="2">Female</option>
+            <option value="3">Other</option>
+        </select>
+        <input type="text" placeholder="Address" @bind-value="model.Address" />
+        <input type="text" placeholder="Mobile"  @bind-value="model.Mobile"
+               @oninput="@(e => model.Mobile = (e.Value?.ToString() ?? string.Empty))"
+               @onkeydown="@(e => CheckForMobileEnterKey(e))" />
+       @*  <input type="text" placeholder="Code" @bind="model.Code" @onkeydown="@(e => CheckForEnterKey(e))" /> *@
+
+        <input type="text" placeholder="Code"
+               @bind-value="prescription.PrescriptionCode"
+               @oninput="@(e =>prescription.PrescriptionCode = (e.Value?.ToString() ?? string.Empty))"
+               @onkeydown="@(e => CheckForEnterKey(e))" />
+        <input type="date" placeholder="Admission Date" @bind-value="model.AdmissionDate" />
+    </div>
+
+    <div class="button-box">
+        <div class="button-container" >
+            <button @onclick="onPreview" style="font-weight:700; color:#000"><span class="icon">👁️</span> Preview</button>
+            <button @onclick="onSavePrintWithHeader" style="font-weight:700; color:#000"><span class="icon">🖨️</span>  Save & Print </button>
+            <button @onclick="onSavePrint" style="font-weight:700; color:#000"><span class="icon">🖨️</span> Save & Print (Without Header)</button>
+            <button @onclick="onSave" style="font-weight:700; color:#000"><span class="icon">💾</span> Save Only</button>
+            @* <button @onclick="onPrint" style="font-weight:700; color:#000"><span class="icon">💾</span> Print Only</button> *@
+        </div>
+    </div>
+</div>
+
+<hr/>
+
+<div class="prescription">
+    <div class="disease">
+        <div class="disease-input-fields">
+            <label>Disease/Condition/Dx:</label><br />
+            <input type="text" @bind-value=prescription.Dx /><br />
+
+            <label>C/C:</label><br />
+            <textarea @bind=prescription.CC></textarea><br />
+
+            <label>O/E:</label><br />
+            <textarea @bind=prescription.OE></textarea><br />
+
+            <label>Advice:</label><br />
+            <textarea @bind=prescription.Advice></textarea><br />
+
+            <label>INV:</label><br />
+            <textarea id="autocomplete-textarea" @bind="prescription.IX"></textarea>
+            <div id="suggestions-panel" class="suggestions"></div>
+
+            <style>
+                .suggestions {
+                    position: absolute;
+                    border: 1px solid #ccc;
+                    border-top: none;
+                    z-index: 1000;
+                    top: 100%; /* Adjust based on your layout */
+                    left: 0;
+                    right: 0;
+                    background: white;
+                }
+
+                    .suggestions div {
+                        padding: 10px;
+                        cursor: pointer;
+                    }
+
+                        .suggestions div:hover {
+                            background-color: #f0f0f0;
+                        }
+            </style>
+
+            
+        </div>
+    </div>
+    <div class="pres-mastert">
+        
+        <div class="medicine-dose">
+            <div class="medicine-input-fields">
+                
+                <select id="brandSelect">
+                    <option value="">Select Brand</option>
+                    @foreach(var item in Brands)
+                    {
+                        <option value="@item.Name">@item.Name</option>
+                    }
+                </select>
+                <select id="doseSelect">
+                    <option value="">Select Dose</option>
+                    @foreach (var item in Dose)
+                    {
+                        <option value="@item.Name">@item.Name</option>
+                    }
+                </select>
+                <select id="durationSelect">
+                    <option value="">Select Duration</option>
+                    @foreach (var item in Duration)
+                    {
+                        <option value="@item.Name">@item.Name</option>
+                    }
+                </select>
+                <input type="checkbox"  />খাবার আগে
+                <input type="checkbox"  />খাবার পরে
+                <input type="checkbox" />গোসলের সময়
+                <input type="checkbox" />গোসলের পরে
+                
+                <button @onclick="onAdd">Add</button>
+            </div>
+        </div>
+        <hr/>
+        <div class="pres-description">
+            <div class="pres-description-medicine mr-5">
+                <div class="prescription-description">
+                   
+                    <div style="min-height:350px; min-width:100%" id="editor1"></div>
+                </div>
+                
+            </div>
+            <div class="from-template ml-5">
+                <select id="treatmentTempSelect" @ref="selectElement">
+                    <option>Get Treatment Template</option>
+                    @foreach(var item in TreatmentTemplates)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+                    
+                </select>
+            </div>
+            
+           
+        </div>
+        <div class="after-see">
+            <input type="text" value="@selectedTemplate?.NumberAfter" id="numberAfter" />
+            <input type="checkbox"  @bind="selectedTemplate.ISDayAfter" id="isDayAfter" />দিন
+            <input type="checkbox" @bind="selectedTemplate.ISMonthAfter" id="ISMonthAfter" />মাস
+            পর আসবেন।
+        </div>
+    </div>
+</div>
+
+<PreviewPers @ref="modal" IsVisible="@showModal" IsVisibleChanged="@((value) => CloseModal())">
+</PreviewPers>
+@code {
+    private TblPatient model = new TblPatient();
+    private TblBrand models = new TblBrand();
+    private List<TblBrand> Brands = new List<TblBrand>();
+    private List<TblDose> Dose = new List<TblDose>();
+    private List<TblTreatmentTemplate> TreatmentTemplates = new List<TblTreatmentTemplate>();
+    private List<TblDuration> Duration = new List<TblDuration>();
+    private TblPrescription prescription = new TblPrescription();
+    private IEnumerable<TblPrescription> prescriptions = new List<TblPrescription>();
+    private TblTreatmentTemplate selectedTemplate = new TblTreatmentTemplate();
+    private bool isRichTextEditorInitialized = false;
+    private int IsWithHeader = 0;
+    private ElementReference selectElement;
+    private bool showModal = false;
+    private PreviewPers modal;
+    public HtmlToPdfConverter hy = new();
+
+
+
+    private string selectedTemplateId;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Brands = new();
+            Brands = await App.Database.GetTableRowsAsync<TblBrand>("TblBrand");
+            Dose = new();
+            Dose = await App.Database.GetTableRowsAsync<TblDose>("TblDose");
+            Duration = new();
+            Duration = await App.Database.GetTableRowsAsync<TblDuration>("TblDuration");
+            TreatmentTemplates = new();
+            TreatmentTemplates = await App.Database.GetTableRowsAsync<TblTreatmentTemplate>("TblTreatmentTemplate");
+
+            AutoGenCode();
+            if (!isRichTextEditorInitialized)
+            {
+                await JSRuntime.InvokeVoidAsync("initializeQuill", "#editor1");
+                isRichTextEditorInitialized = true;
+            }
+
+            var objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("initializeSelect2WithTagCreate", "doseSelect", "Select Dose", objRef, true);
+
+            await JSRuntime.InvokeVoidAsync("initializeSelect2", "brandSelect", "Select Brand",true);
+
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("initializeSelect2WithTagCreate", "durationSelect", "Select Duration", objRef, true);
+
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("initializeSelect2WithBlazor", selectElement, objRef);
+
+
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+
+    }
+    protected async Task onPrint()
+    {
+
+        // Call HtmlTopdf to get the PDF as a byte array
+        var pdfBytes = await hy.HtmlTopdf();
+
+        // Trigger download using JavaScript
+        await DownloadFile("html_saved.pdf", pdfBytes);
+    }
+    private async Task DownloadFile(string fileName, byte[] fileContent)
+    {
+        var base64File = Convert.ToBase64String(fileContent);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", fileName, base64File);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("initializeTextareaAutocomplete", objRef);
+        }
+    }
+
+    [JSInvokable]
+    public async Task<List<string>> GetSuggestions(string input)
+    {
+        try
+        {
+            var sql = $"SELECT * FROM TblPrescription WHERE IX LIKE '%{input}%'";
+            prescriptions = await _dp.ExecuteSqlQueryAsync<TblPrescription>(sql);
+
+
+            // Check if input is null or empty to avoid errors and unnecessary processing
+            if (string.IsNullOrEmpty(input))
+                return new List<string>();  // Return an empty list if there is no input
+
+            // Extracting the IX property values and filtering them based on the input
+            List<string> ixData = prescriptions.Select(p => p.IX).ToList();
+
+            return ixData;
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+
+    }
+
+
+
+    private async Task onPreview()
+    {
+        showModal = true;
+        modal.previewData = await getPreviewData();
+        StateHasChanged();
+    }
+
+    private async Task<PerviewPresVM> getPreviewData()
+    {
+        var x = await JSRuntime.InvokeAsync<string>("getQuillContent", "#editor1");
+        var getdata = await JSRuntime.InvokeAsync<dynamic>("getPrescriptionData");
+
+        var data = new PerviewPresVM();
+
+        if (getdata is JsonElement element)
+        {
+            data.NumberAfter = Convert.ToDecimal(element.GetProperty("NumberAfter").GetString() != "" ? element.GetProperty("NumberAfter").GetString():0);
+            data.ISDayAfter = element.GetProperty("ISDayAfter").GetBoolean();
+            data.ISMonthAfter = element.GetProperty("ISMonthAfter").GetBoolean();
+
+        }
+        AutoGenCode();
+        data.PrescriptionDetails = x;
+        data.Name = model.Name;
+        data.Age = model.Age;
+        data.Address = model.Address;
+        data.PrescriptionCode = prescription.PrescriptionCode;
+        data.Gender = model.Gender == 1 ? "M" : model.Gender == 2 ? "F" : "O";
+        data.Mobile = model.Mobile;
+        data.CC = prescription.CC;
+        data.OE = prescription.OE;
+        data.Advice = prescription.Advice;
+        if(prescription.Id != Guid.Empty)
+        {
+            data.PrescriptionDate = prescription.PrescriptionDate;
+        }
+        else
+        {
+            data.PrescriptionDate = DateTime.Now.Date;
+        }
+
+        data.Dx = prescription.Dx;
+        data.IX = prescription.IX;
+
+        var sql = "Select * from TblDoctor LIMIT 1;";
+        data.TblDoctor = new TblDoctor();
+        var Doctor = await _dp.ExecuteSqlQueryAsync<TblDoctor>(sql);
+        if (Doctor.Any())
+        {
+            data.TblDoctor = Doctor.First();
+        }
+
+        return data;
+
+    }
+
+    private async Task LoadBrandsIfNotLoaded()
+    {
+        if (Brands == null || !Brands.Any())
+        {
+            Brands = await _dp.GetTableRowsAsync<TblBrand>("TblBrand");
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDoseIfNotLoaded()
+    {
+        if (Dose == null || !Dose.Any())
+        {
+            Dose = await _dp.GetTableRowsAsync<TblDose>("TblDose");
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDurationIfNotLoaded()
+    {
+        if (Duration == null || !Duration.Any())
+        {
+            Duration = await _dp.GetTableRowsAsync<TblDuration>("TblDuration");
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task CheckForEnterKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(prescription.PrescriptionCode))
+        {
+            string sql = $"select p.Id,t.Address,p.NumberAfter,p.LicenseKey,t.AdmissionDate ,t.Id as PatientId,p.PrescriptionCode, t.Mobile,  p.Dx, p.OE, p.Ix, p.Advice, p.CC, p.ISDayAfter, p.ISMonthAfter,  t.Name, t.Age, T.Mobile,p.PrescriptionCode,p.PrescriptionDate, p.PrescriptionDetails,t.Gender from TblPrescription  p  left join TblPatient t on p.PatientId = t.Id where PrescriptionCode ='{prescription.PrescriptionCode}'";
+            var users = await _dp.ExecuteSqlQueryAsync<PerviewPresVM>(sql);
+            if (users.Any())
+            {
+                var data = users.FirstOrDefault();
+                prescription.Advice = data.Advice;
+                prescription.IX = data.IX;
+                prescription.Id = data.Id ?? new Guid();
+                prescription.OE = data.OE;
+                prescription.NumberAfter = data.NumberAfter;
+                prescription.ISDayAfter = data.ISDayAfter;
+                prescription.ISMonthAfter = data.ISMonthAfter;
+                prescription.LicenseKey = data.LicenseKey;
+                prescription.PatientId = data.PatientId;
+                prescription.PrescriptionCode = data.PrescriptionCode;
+                prescription.PrescriptionDate = data.PrescriptionDate;
+                prescription.CC = data.CC;
+                prescription.PrescriptionDetails = data.PrescriptionDetails;
+                prescription.Dx = data.Dx;
+
+
+                model.Id = data.PatientId ?? new Guid();
+                model.Address = data.Address;
+                model.Name = data.Name;
+                model.AdmissionDate = data.AdmissionDate;
+                model.Age = data.Age;
+                model.Gender = Convert.ToInt32(model.Gender ?? 3);
+                model.Mobile = data.Mobile;
+
+                selectedTemplate.ISDayAfter = data.ISDayAfter;
+                selectedTemplate.NumberAfter = data.NumberAfter;
+                selectedTemplate.ISMonthAfter = data.ISMonthAfter;
+
+                await JSRuntime.InvokeVoidAsync("setQuillContent", "#editor1", prescription.PrescriptionDetails);
+                StateHasChanged();
+            }
+            else
+            {
+                model = new();
+                var code = prescription.PrescriptionCode;
+                prescription = new();
+                prescription.PrescriptionCode = code;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        // await JS.InvokeVoidAsync("destroyQuill", "#editors"); // Destroy the editor instance and clear content
+        showModal = false; // Close the modal
+        StateHasChanged();
+    }
+
+
+    // Method that handles the onchange event
+    [JSInvokable] // Make the method callable from JS
+    public async Task OnTreatmentTemplateChange(string selectedValue)
+    {
+        selectedTemplateId = selectedValue; // Capture the selected value
+
+        if (!string.IsNullOrEmpty(selectedTemplateId) && Guid.TryParse(selectedTemplateId, out Guid parsedId))
+        {
+            selectedTemplate = TreatmentTemplates.FirstOrDefault(t => t.Id == parsedId);
+            await JSRuntime.InvokeVoidAsync("setQuillContent", "#editor1", selectedTemplate?.PrescriptionDetails);
+            StateHasChanged();
+            // Optionally call StateHasChanged() if UI update is needed
+        }
+    }
+
+
+    [JSInvokable] // Make the method callable from JS
+    public async Task OnTagSavetoDB(string selectedValue,string Id)
+    {
+
+        switch (Id)
+        {
+            case "doseSelect":
+                var table = new TblDose();
+                var sql = $"SELECT * FROM TblDose WHERE Name = '{selectedValue}'";
+                // Use parameterized queries to prevent SQL injection
+                var data = await _dp.ExecuteSqlQueryAsync<TblDose>(sql);
+                if (data.Count() == 0 && selectedValue != "")
+                {
+                    table.Name = selectedValue;
+                    table.Id = Guid.NewGuid();
+                    await _dp.CreateAsync(table);
+                    Dose = await App.Database.GetTableRowsAsync<TblDose>("TblDose");
+                    StateHasChanged();
+                }
+                break;
+            case "durationSelect":
+                var table1 = new TblDuration();
+                var sql1 = $"SELECT * FROM TblDuration WHERE Name = '{selectedValue}'";
+                // Use parameterized queries to prevent SQL injection
+                var data1 = await _dp.ExecuteSqlQueryAsync<TblDose>(sql1);
+                if (data1.Count() == 0 && selectedValue != "")
+                {
+                    table1.Name = selectedValue;
+                    table1.Id = Guid.NewGuid();
+                    await _dp.CreateAsync(table1);
+                    Duration = await App.Database.GetTableRowsAsync<TblDuration>("TblDuration");
+                    StateHasChanged();
+                }
+                break;
+        }
+
+    }
+
+
+
+    private async Task onSavePrint()
+    {
+        await onPreview();
+        await onSave();
+        modal.isPrint = true;
+        modal.IsWithHeader = 0;
+    }
+    private async Task onSavePrintWithHeader()
+    {
+        await onPreview();
+        await onSave();
+        modal.isPrint = true;
+        modal.IsWithHeader = 1;
+
+    }
+
+
+    private async Task onSave()
+    {
+        try
+        {
+            AutoGenCode();
+            if (model.Id == Guid.Empty)
+            {
+                await SavePatient();
+
+
+            }
+            var x = await JSRuntime.InvokeAsync<string>("getQuillContent", "#editor1");
+            var data = await JSRuntime.InvokeAsync<dynamic>("getPrescriptionData");
+
+            prescription.PatientId = model.Id;
+            if (data is JsonElement element)
+            {
+                prescription.NumberAfter = (element.GetProperty("NumberAfter").GetString()) !="" ? Convert.ToDecimal(element.GetProperty("NumberAfter").GetString()):0;
+                prescription.ISDayAfter = element.GetProperty("ISDayAfter").GetBoolean();
+                prescription.ISMonthAfter = element.GetProperty("ISMonthAfter").GetBoolean();
+
+            }
+            prescription.PatientId = model.Id;
+            prescription.Id = Guid.NewGuid();
+            prescription.PrescriptionDetails = x;
+            prescription.PrescriptionDate = DateTime.Now;
+            var sql = "Select * from TblLicenseInfo LIMIT 1;";
+            var license = await _dp.ExecuteSqlQueryAsync<TblLicenseInfo>(sql);
+            if (license.Any())
+            {
+                prescription.LicenseKey = license.First().LicenseKey;
+            }
+            else
+            {
+                prescription.LicenseKey = "No License Found";
+            }
+            await _dp.CreateAsync(prescription);
+            await JSRuntime.InvokeVoidAsync("clearQuill", "#editor1");
+            selectedTemplate = new();
+            model = new();
+            prescription = new();
+            AutoGenCode();
+            StateHasChanged();
+
+        }
+        catch(Exception ex)
+        {
+            throw;
+        }
+
+    }
+
+    private async Task SavePatient()
+    {
+        model.Id = Guid.NewGuid();
+        await _dp.CreateAsync(model);  // Use await here
+
+    }
+    // private async Task onPrint()
+    // {
+    //     model.Id = Guid.NewGuid();
+    //     await _dp.CreateAsync(model);  // Use await here
+         
+    // }
+
+    private async void CheckForMobileEnterKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+
+            if(!string.IsNullOrWhiteSpace(model.Mobile))
+            {
+                string sql = $"SELECT * FROM [TblPatient] WHERE Mobile ='{model.Mobile}'";
+                var users = await _dp.ExecuteSqlQueryAsync<TblPatient>(sql);
+                if (users.Any()){
+                    model = users.FirstOrDefault();
+
+                }
+                StateHasChanged();
+
+            }
+
+        }
+    }
+    private async void onAdd()
+    {
+        try
+        {
+
+            var x = await JSRuntime.InvokeAsync<dynamic>("onAdd", "Hudai");
+            await UpdateQuillEditorAsync(x);
+
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+    }
+
+    private async Task UpdateQuillEditorAsync(dynamic x)
+    {
+        // Ensure 'x' is a JsonElement
+        if (x is JsonElement element)
+        {
+            // Access each property by name
+            var brand = element.GetProperty("brand").GetString();
+            var dose = element.GetProperty("dose").GetString() != "" ?  element.GetProperty("dose").GetString() : "";
+            var duration = element.GetProperty("duration").GetString() != "" ? " - " + element.GetProperty("duration").GetString()  : "";
+            var beforeFood = element.GetProperty("beforeFood").GetBoolean();
+            var afterFood = element.GetProperty("afterFood").GetBoolean();
+            var beforeBath = element.GetProperty("beforeBath").GetBoolean();
+            var afterBath = element.GetProperty("afterBath").GetBoolean();
+
+
+            var brandlength = brand.Length;
+
+
+            List<string> kawarInstruct = new List<string>();
+
+
+            if (beforeFood)
+            {
+                kawarInstruct.Add(" - খাবার আগে");
+            }
+            if (afterFood)
+            {
+                kawarInstruct.Add(" - খাবার পরে");
+            }
+            if (beforeBath)
+            {
+                kawarInstruct.Add(" - গোসলের সময়");
+            }
+            if (afterBath)
+            {
+                kawarInstruct.Add(" - গোসলের পরে");
+            }
+
+            // Join selected instructions with a comma
+            string kawarInstructResult = string.Join(", ", kawarInstruct);
+
+            // Prepare the new content to add
+            var newContent = $"<p><b>{brand}</b>\n" +
+                             $"<p>{dose}" +
+                             $"{duration}" +
+                             $"{kawarInstructResult}</p>\n\n";
+
+            // Get the existing content from Quill, if any
+
+
+            // Combine existing content with the new content
+            // var combinedContent = existingContent + newContent;
+            // var combinedContent = newContent;
+
+            // Set the combined content back to Quill
+            await JSRuntime.InvokeVoidAsync("setQuillContent", "#editor1", newContent, brandlength);
+        }
+    }
+
+
+
+    private async void AutoGenCode()
+    {
+        var sql = $"SELECT * FROM [TblPrescription] ORDER BY PrescriptionCode DESC LIMIT 1";
+        var lastUser = await _dp.ExecuteSqlQueryAsync<TblPrescription>(sql);
+        if (lastUser.Any())
+        {
+            prescription.PrescriptionCode = (Convert.ToInt32(lastUser.Select(x => x.PrescriptionCode).FirstOrDefault()) + 1).ToString();
+        }
+        else
+        {
+            prescription.PrescriptionCode = DateTime.Now.ToString("yy") + "0001";
+
+        }
+
+
+    }
+
+
+
+}
+
+<script>
+    function getQuillContent(selector) {
+        const quill = Quill.find(document.querySelector(selector));
+        var len = quill.getLength();
+        var text = quill.getSemanticHTML(0,parseInt(len));
+        return text;
+    }
+    function getPrescriptionData() {
+        const isDayAfter = document.querySelectorAll('input[type="checkbox"]')[2].checked;
+        const isMonthAfter = document.querySelectorAll('input[type="checkbox"]')[3].checked;
+        const numberAfter = document.getElementById("numberAfter").value;
+
+        // Return only the data values, not the DOM elements
+        const formData = {
+            ISDayAfter: isDayAfter,
+            ISMonthAfter: isMonthAfter,
+            NumberAfter: numberAfter
+        };
+
+        return formData;
+    }
+    function setQuillContent(selector, content) {
+        const quill = Quill.find(document.querySelector(selector));
+        if (quill) {
+            quill.root.innerHTML += content;
+        }
+    }
+
+    function onAdd(hudai) {
+        // debugger;
+        // alert(1);
+        // Get selected values from dropdowns
+        const brandSelect = document.getElementById("brandSelect").value;
+        const doseSelect = document.getElementById("doseSelect").value;
+        const durationSelect = document.getElementById("durationSelect").value;
+
+        // Get checkbox values
+        const beforeFood = document.querySelectorAll('input[type="checkbox"]')[0].checked;
+        const afterFood = document.querySelectorAll('input[type="checkbox"]')[1].checked;
+        const beforeBath = document.querySelectorAll('input[type="checkbox"]')[2].checked;
+        const afterBath = document.querySelectorAll('input[type="checkbox"]')[3].checked;
+
+        // Create an object with the data
+        const formData = {
+            brand: brandSelect,
+            dose: doseSelect,
+            duration: durationSelect,
+            beforeFood: beforeFood,
+            afterFood: afterFood,
+            beforeBath: beforeBath,
+            afterBath: afterBath
+        };
+        return formData;
+
+        // console.log(formData); // Outputs all gathered data to the console
+
+        // You can also send formData to your server or use it as needed
+    };
+    function clearQuill(selector) {
+        const quill = Quill.find(document.querySelector(selector));
+        if (quill) {
+            quill.setText(''); // Clears the content in the editor
+        }
+    }
+
+</script>

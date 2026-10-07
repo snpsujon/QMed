@@ -1,0 +1,513 @@
+﻿@page "/TreatmentTemplate"
+
+@using QuickMedBlazor.DB
+@using System.Text.Json
+@inject ApplicationDbContext _dp;
+@inject IJSRuntime JS
+
+<style>
+    /* Your existing styles */
+    .temp-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .button-box-right {
+        display: flex;
+        justify-content: flex-end; /* Aligns content to the right */
+        padding-top: 10px; /* Optional: adds spacing above the button */
+    }
+
+    /* Other existing styles... */
+
+    /* Style for the modal container to enable scrolling */
+    .modal-scrollable-content {
+        max-height: 80vh; /* Sets max height to 80% of the viewport */
+        overflow-y: auto; /* Enables vertical scrolling */
+        padding: 20px; /* Adds padding for better spacing */
+    }
+
+        /* Optional: Style for smoother scrolling */
+        .modal-scrollable-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-scrollable-content::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+
+            .modal-scrollable-content::-webkit-scrollbar-thumb:hover {
+                background-color: #aaa;
+            }
+
+
+</style>
+
+
+<div class="temp-header">
+    <h3>Treatment Template List</h3>
+    <div class="button-container">
+        <button @onclick="OpenModalAndInitializeEditor">
+            <span class="icon">💾</span> Add New
+        </button>
+    </div>
+</div>
+
+@if (treatmentTemplates.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Actions</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in treatmentTemplates)
+            {
+                <tr>
+                    <td>
+                        <button @onclick="() => Edit(item)" class="icon-button" title="Edit">
+                            <span class="icon">✏️</span>
+                        </button>
+                        <button @onclick="() => Delete(item)" class="icon-button" title="Delete">
+                            <span class="icon">🗑️</span>
+                        </button>
+                    </td>
+                    <td>@item.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p><em>No Data Available</em></p>
+}
+
+<!-- TreatmentTemplateModal Component -->
+<TreatmentTemplateModal IsVisible="@showModal" IsVisibleChanged="@((value) => CloseModal())">
+    <h3>Add New Treatment Template</h3>
+    <div class="modal-scrollable-content">
+        <div class="input-fields mb-5">
+            <input type="text" placeholder="Template Name"  class="wide-input" @bind-value=model.Name id="TemplateName" />
+        </div>
+        <div class="pres-mastert-treatment">
+            <div class="medicine-dose">
+                <div class="medicine-input-fields">
+                    <select id="brandSelect" style="max-width: 250px;">
+                        <option value="">Select Brand</option>
+                        @foreach (var item in Brands)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    </select>
+                    <select id="doseSelect" style="max-width: 250px;">
+                        <option value="">Select Dose</option>
+                        @foreach (var item in Dose)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    </select>
+                    <select id="durationSelect" style="max-width: 250px;">
+                        <option value="">Select Duration</option>
+                        @foreach (var item in Duration)
+                        {
+                            <option value="@item.Name">@item.Name</option>
+                        }
+                    </select>
+                   
+                    <input type="checkbox"  />খাবার আগে
+                    <input type="checkbox"  />খাবার পরে
+                    <input type="checkbox" />গোসলের সময়
+                    <input type="checkbox" />গোসলের পরে
+                
+                    <div class="button-box-right">
+                        <button class="btn btn-outline-secondary" @onclick="onAdd"> Add</button>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+            <!-- Your other content goes here -->
+            <div class="pres-description-treatment">
+                <div class="prescription-description">
+                    <!-- Quill Editor Container -->
+                    <div id="editors" style="min-height:250px; min-width:100%"></div>
+                </div>
+                <div class="after-see">
+                    <input type="text" @bind-value=model.NumberAfter />
+                    <input type="checkbox" @bind-value=model.ISDayAfter /> দিন
+                    <input type="checkbox" @bind-value=model.ISMonthAfter /> মাস পর আসবেন।
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="button-box-right">
+        <button @onclick="SaveTemplate"><span class="icon">💾</span> Save</button>
+    </div>
+</TreatmentTemplateModal>
+
+
+
+
+@code {
+
+    private List<TblTreatmentTemplate> treatmentTemplates = new();
+    private TblTreatmentTemplate model = new();
+    private List<TblBrand> Brands = new List<TblBrand>();
+    private List<TblDose> Dose = new List<TblDose>();
+    private List<TblDuration> Duration = new List<TblDuration>();
+    private bool showModal = false;
+    private string newTemplateName;
+    private bool isRichTextEditorInitialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            treatmentTemplates = await App.Database.GetTableRowsAsync<TblTreatmentTemplate>("TblTreatmentTemplate");
+
+            await JS.InvokeVoidAsync("initializeQuill", "#editor");
+            await JS.InvokeVoidAsync("initializeSelect2", "genderSelect", "Select Gender");
+            await JS.InvokeVoidAsync("initializeSelect2", "brandSelect", "Select Brand", true);
+
+            var objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("initializeSelect2WithTagCreate", "doseSelect", "Select Dose", objRef, true);
+
+            objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("initializeSelect2WithTagCreate", "durationSelect", "Select Duration", objRef, true);
+
+            Brands = await _dp.GetTableRowsAsync<TblBrand>("TblBrand");
+            Dose = await _dp.GetTableRowsAsync<TblDose>("TblDose");
+            Duration = await _dp.GetTableRowsAsync<TblDuration>("TblDuration");
+            StateHasChanged();
+        }
+        catch(Exception ex)
+        {
+            throw;
+        }
+
+    }
+
+    [JSInvokable] // Make the method callable from JS
+    public async Task OnTagSavetoDB(string selectedValue, string Id)
+    {
+
+        switch (Id)
+        {
+            case "doseSelect":
+                var table = new TblDose();
+                var sql = $"SELECT * FROM TblDose WHERE Name = '{selectedValue}'";
+                // Use parameterized queries to prevent SQL injection
+                var data = await _dp.ExecuteSqlQueryAsync<TblDose>(sql);
+                if (data.Count() == 0 && selectedValue != "")
+                {
+                    table.Name = selectedValue;
+                    table.Id = Guid.NewGuid();
+                    await _dp.CreateAsync(table);
+                    Dose = await App.Database.GetTableRowsAsync<TblDose>("TblDose");
+                    StateHasChanged();
+                }
+                break;
+            case "durationSelect":
+                var table1 = new TblDuration();
+                var sql1 = $"SELECT * FROM TblDuration WHERE Name = '{selectedValue}'";
+                // Use parameterized queries to prevent SQL injection
+                var data1 = await _dp.ExecuteSqlQueryAsync<TblDose>(sql1);
+                if (data1.Count() == 0 && selectedValue != "")
+                {
+                    table1.Name = selectedValue;
+                    table1.Id = Guid.NewGuid();
+                    await _dp.CreateAsync(table1);
+                    Duration = await App.Database.GetTableRowsAsync<TblDuration>("TblDuration");
+                    StateHasChanged();
+                }
+                break;
+        }
+
+    }
+
+    private async Task OpenModalAndInitializeEditor()
+    {
+        model = new TblTreatmentTemplate();
+        showModal = true; // Open the modal
+        await Task.Delay(100); // Wait for modal to fully render
+        if (!isRichTextEditorInitialized)
+        {
+            await JS.InvokeVoidAsync("initializeQuill", "#editors"); // Initialize a new editor instance
+            isRichTextEditorInitialized = true;
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("clearQuill", "#editors"); // Clear the editor content
+        }
+
+        // await JS.InvokeVoidAsync("initializeQuill", "#editors"); // Initialize a new editor instance
+        StateHasChanged();
+    }
+    private async Task CloseModal()
+    {
+        // await JS.InvokeVoidAsync("destroyQuill", "#editors"); // Destroy the editor instance and clear content
+        showModal = false; // Close the modal
+        StateHasChanged();
+    }
+
+    private async Task SaveTemplate()
+    {
+        try
+        {
+            var x = await JS.InvokeAsync<string>("getQuillContent", "#editors");
+            model.PrescriptionDetails = x;
+            if (model.Id != Guid.Empty)
+            {
+                await App.Database.UpdateAsync(model);
+            }
+            else
+            {
+                model.Id = Guid.NewGuid();
+                await App.Database.CreateAsync(model);
+            }
+
+            
+            await CloseModal(); // Close the modal and reset the editor
+            newTemplateName = string.Empty; // Clear the template name input
+
+
+            await OnInitializedAsync();
+            StateHasChanged();
+        }catch(Exception ex)
+        {
+            throw;
+        }
+
+        // Save template logic here (e.g., saving to a database)
+        // await CloseModal(); // Close the modal and reset the editor
+        // newTemplateName = string.Empty; // Clear the template name input
+    }
+    private async void Edit(TblTreatmentTemplate data)
+    {
+        await OpenModalAndInitializeEditor();
+        await JS.InvokeVoidAsync("setQuillContent", "#editors", data.PrescriptionDetails, 5);
+        model = data;
+        StateHasChanged();
+        showModal = true; // Open the modal
+
+        
+    }
+
+    private void Delete(TblTreatmentTemplate data)
+    {
+        treatmentTemplates.Remove(data);
+    }
+
+    private void AddNewTemplatebtn()
+    {
+        showModal = true;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && showModal)
+        {
+            await JS.InvokeVoidAsync("initializeQuill", "#editors");
+            StateHasChanged();
+        }
+    }
+    private async void onAdd()
+    {
+        try
+        {
+
+            var x= await JS.InvokeAsync<dynamic>("onAdd", "Hudai");
+            await UpdateQuillEditorAsync(x);
+
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+
+    }
+    private async Task UpdateQuillEditorAsync(dynamic x)
+    {
+        // Ensure 'x' is a JsonElement
+        if (x is JsonElement element)
+        {
+            // Access each property by name
+            var brand = element.GetProperty("brand").GetString();
+            var dose = element.GetProperty("dose").GetString() != "" ? element.GetProperty("dose").GetString() + " - ":"" ;
+            var duration = element.GetProperty("duration").GetString() != "" ? element.GetProperty("duration").GetString() +" - " : "";
+            var beforeFood = element.GetProperty("beforeFood").GetBoolean();
+            var afterFood = element.GetProperty("afterFood").GetBoolean();
+            var beforeBath = element.GetProperty("beforeBath").GetBoolean();
+            var afterBath = element.GetProperty("afterBath").GetBoolean();
+
+
+
+            var brandlength = brand.Length;
+            List<string> kawarInstruct = new List<string>();
+
+
+            if (beforeFood)
+            {
+                kawarInstruct.Add(" - খাবার আগে");
+            }
+            if (afterFood)
+            {
+                kawarInstruct.Add(" - খাবার পরে");
+            }
+            if (beforeBath)
+            {
+                kawarInstruct.Add(" - গোসলের সময়");
+            }
+            if (afterBath)
+            {
+                kawarInstruct.Add(" - গোসলের পরে");
+            }
+
+            // Join selected instructions with a comma
+            string kawarInstructResult = string.Join(", ", kawarInstruct);
+            // Prepare the new content to add
+            var newContent = $"<p><b>{brand}</b>\n" +
+                             $"<p>{dose}" +
+                             $"{duration}" +
+                             $"{kawarInstructResult}</p>\n\n";
+
+            // Get the existing content from Quill, if any
+            
+
+            // Combine existing content with the new content
+            // var combinedContent = existingContent + newContent;
+            // var combinedContent = newContent;
+
+            // Set the combined content back to Quill
+            await JS.InvokeVoidAsync("setQuillContent", "#editors", newContent, brandlength);
+        }
+    }
+
+
+}
+
+<script>
+    let quillEditor;
+
+    function getQuillContent(selector) {
+        const quill = Quill.find(document.querySelector(selector));
+        var len = quill.getLength();
+        var text = quill.getSemanticHTML(0,parseInt(len));
+        return text;
+    }
+    // function getData(selector){
+    //     const quill = Quill.find(document.querySelector(selector));
+    //     var len = quill.getLength();
+    //     var text = quill.getSemanticHTML(0, parseInt(len));
+    //     const Name = document.getElementById("TemplateName").value;
+    //     const NumberAfter = document.getElementById("NumberAfter").value;
+    //     const ISDayAfter = document.getElementById("ISDayAfter").checked;
+    //     const ISMonthAfter = document.getElementById("ISMonthAfter").checked;
+
+    //     const formData = {
+    //         Name: Name,
+    //         NumberAfter: NumberAfter,
+    //         ISDayAfter: ISDayAfter,
+    //         ISMonthAfter: ISMonthAfter,
+    //         PrescriptionDetails: text
+    //     };
+
+    //     return formData;
+    // }
+
+    function setQuillContent(selector, content, brandlength) {
+        const quill = Quill.find(document.querySelector(selector));
+        if (quill) {
+            quill.root.innerHTML += content;
+        }
+    }
+
+
+    function onAdd(hudai) {
+        // debugger;
+        // alert(1);
+        // Get selected values from dropdowns
+        const brandSelect = document.getElementById("brandSelect").value;
+        const doseSelect = document.getElementById("doseSelect").value;
+        const durationSelect = document.getElementById("durationSelect").value;
+
+        const beforeFood = document.querySelectorAll('input[type="checkbox"]')[0].checked;
+        const afterFood = document.querySelectorAll('input[type="checkbox"]')[1].checked;
+        const beforeBath = document.querySelectorAll('input[type="checkbox"]')[2].checked;
+        const afterBath = document.querySelectorAll('input[type="checkbox"]')[3].checked;
+
+        // Create an object with the data
+        const formData = {
+            brand: brandSelect,
+            dose: doseSelect,
+            duration: durationSelect,
+            beforeFood: beforeFood,
+            afterFood: afterFood,
+            beforeBath: beforeBath,
+            afterBath: afterBath
+
+        };
+        return formData;
+
+        // console.log(formData); // Outputs all gathered data to the console
+
+        // You can also send formData to your server or use it as needed
+    };
+
+
+
+    function initializeQuill(selector) {
+        // Check if the editor instance already exists
+        if (quillEditor) {
+            quillEditor = null; // Reset the JavaScript reference
+            const editorElement = document.querySelector(selector);
+            if (editorElement) {
+                editorElement.innerHTML = ""; // Clear previous content
+            }
+            // Remove the toolbar container if it exists
+            const toolbar = document.querySelector(".ql-toolbar");
+            if (toolbar) {
+                toolbar.remove(); // Removes any previous toolbar instance
+            }
+        }
+
+
+
+        // Create a new Quill editor instance
+        quillEditor = new Quill(selector, {
+            theme: 'snow'
+        });
+    }
+
+
+    function clearQuill(selector) {
+        const quill = Quill.find(document.querySelector(selector));
+        if (quill) {
+            quill.setText(''); // Clears the content in the editor
+        }
+    }
+
+    // function destroyQuill(selector) {
+    //     if (quillEditor) {
+    //         quillEditor = null; // Clear the JavaScript reference
+    //         const editorElement = document.querySelector(selector);
+    //         if (editorElement) {
+    //             editorElement.innerHTML = ""; // Clear the editor container to remove all text and headings
+    //         }
+    //         // Remove toolbar if it exists
+    //         const toolbar = document.querySelector(".ql-toolbar");
+    //         if (toolbar) {
+    //             toolbar.remove();
+    //         }
+    //     }
+    // }
+</script>
+
+
+

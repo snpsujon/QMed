@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>QuickMed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
+    <meta content="" name="author" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="dastheme/images/favicon.ico">
+
+    <!-- jvectormap -->
+    <link href="dastheme/plugins/jvectormap/jquery-jvectormap-2.0.2.css" rel="stylesheet">
+
+    <!-- App css -->
+    <link href="dastheme/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="dastheme/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="dastheme/css/metisMenu.min.css" rel="stylesheet" type="text/css" />
+    <link href="dastheme/plugins/daterangepicker/daterangepicker.css" rel="stylesheet" type="text/css" />
+    <link href="dastheme/css/app.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="css/app.css" />
+
+    <!-- Plugins css -->
+    <link href="dastheme/plugins/select2/select2.min.css" rel="stylesheet" type="text/css" />
+    <link href="dastheme/plugins/huebee/huebee.min.css" rel="stylesheet" type="text/css" />
+
+    <!--Data Table Plugins-->
+    <link href="dastheme/plugins/datatables/dataTables.bootstrap5.min.css" rel="stylesheet" type="text/css" />
+    <link href="dastheme/plugins/datatables/buttons.bootstrap5.min.css" rel="stylesheet" type="text/css" />
+    <link href="dastheme/plugins/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/quill.snow.css" rel="stylesheet" type="text/css" />
+
+
+    <link href="dastheme/plugins/timepicker/bootstrap-material-datetimepicker.css" rel="stylesheet">
+    <link href="dastheme/plugins/bootstrap-touchspin/css/jquery.bootstrap-touchspin.min.css" rel="stylesheet" />
+    <link href="dastheme/plugins/dropify/css/dropify.min.css" rel="stylesheet">
+
+</head>
+<style>
+    .swal-success {
+        color: #228838;
+    }
+    .swal-info {
+        color: #148496;
+    }
+    .swal-danger {
+        color: #C82B32;
+    }
+    .cursor-pointer{
+        cursor:pointer;
+    }
+    .is-invalid {
+        border-color: red;
+    }
+</style>
+
+<body data-layout="horizontal" class="dark-topbar" id="bodyyy" style="font-size:18px;">
+
+    <!-- Top Bar Start -->
+    <div class="topbar">
+        <!-- LOGO -->
+        <div class="brand">
+            <a href="/" class="logo">
+                <span>
+                    <img src="dastheme/images/logo1.png" alt="logo-small" class="logo-sm">
+                </span>
+                <span>
+                    <span class="logo-lg logo-light" style="color:#FFF">
+                        QuickMed
+                    </span>
+                </span>
+            </a>
+        </div>
+        <!--end logo-->
+        <!-- Navbar -->
+        <nav class="navbar-custom">
+            <ul class="list-unstyled topbar-nav float-end mb-0">
+
+                <li class="dropdown">
+                    <a class="nav-link dropdown-toggle waves-effect waves-light nav-user" data-bs-toggle="dropdown" href="#" role="button"
+                       aria-haspopup="false" aria-expanded="false">
+
+                        <img src="dastheme/images/users/user-5.jpg" alt="profile-user" class="rounded-circle thumb-sm" />
+                    </a>
+
+                </li>
+                <li class="menu-item">
+                    <!-- Mobile menu toggle-->
+                    <a class="navbar-toggle nav-link" id="mobileToggle">
+                        <div class="lines">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </a><!-- End mobile menu toggle-->
+                </li> <!--end menu item-->
+            </ul><!--end topbar-nav-->
+
+            <div class="navbar-custom-menu">
+                <div id="navigation">
+                    <!-- Navigation Menu-->
+                    <ul class="navigation-menu">
+
+                        <li class="has-submenu mymenu-item" id="dashboard">
+                            <a href="dashboard" onclick="setActiveMenu('dashboard')">
+                                <span><i class="dripicons-home align-self-center hori-menu-icon fs-5"></i>Dashboard</span>
+                            </a>
+                        </li><!--end has-submenu-->
+                        <li class="has-submenu mymenu-item" id="prescription">
+                            <a href="prescription" onclick="setActiveMenu('prescription')">
+                                <span><i class="dripicons-medical align-self-center hori-menu-icon fs-5"></i>Prescription</span>
+                            </a>
+                        </li><!--end has-submenu-->
+                        <li class="has-submenu mymenu-item" id="prescription-list">
+                            <a href="prescription-list" onclick="setActiveMenu('prescription-list')">
+                                <span><i class="dripicons-checklist align-self-center hori-menu-icon fs-5"></i>Prescription List</span>
+                            </a>
+                        </li><!--end has-submenu-->
+
+                        <li class="has-submenu" id="template">
+                            <a href="#" onclick="setActiveMenu('template')">
+                                <span><i class="dripicons-store align-self-center hori-menu-icon fs-5"></i>Template</span>
+                            </a>
+                            <ul class="submenu">
+                                <li id="treatment" class="mymenu-item"><a href="treatmentTemp" onclick="setActiveMenu('treatment')"><i class="ti ti-minus"></i>Treatment</a></li>
+                                <!--<li id="prescription" class="mymenu-item"><a href="prescriptionTemp" onclick="setActiveMenu('prescription')"><i class="ti ti-minus"></i>Prescription</a></li>-->
+                                <li id="favourite" class="mymenu-item"><a href="drugTemp" onclick="setActiveMenu('favourite')"><i class="ti ti-minus"></i>Favourite / Drug</a></li>
+                                <li id="refer" class="mymenu-item"><a href="referTemp" onclick="setActiveMenu('refer')"><i class="ti ti-minus"></i>Refer</a></li>
+                                <li id="advice" class="mymenu-item"><a href="advice" onclick="setActiveMenu('advice')"><i class="ti ti-minus"></i>Advice</a></li>
+                                <li id="ix" class="mymenu-item"><a href="ixTemp" onclick="setActiveMenu('ix')"><i class="ti ti-minus"></i>IX</a></li>
+                                <li id="dose" class="mymenu-item"><a href="doseTemp" onclick="setActiveMenu('dose')"><i class="ti ti-minus"></i>Dose</a></li>
+                                <li id="duration" class="mymenu-item"><a href="durationTemp" onclick="setActiveMenu('duration')"><i class="ti ti-minus"></i>Duration</a></li>
+                                <li id="dx" class="mymenu-item"><a href="dxTemp" onclick="setActiveMenu('dx')"><i class="ti ti-minus"></i>DX</a></li>
+                                <li id="cc" class="mymenu-item"><a href="ccTemp" onclick="setActiveMenu('cc')"><i class="ti ti-minus"></i>CC</a></li>
+                                <li id="mix" class="mymenu-item"><a href="mixTemp" onclick="setActiveMenu('mix')"><i class="ti ti-minus"></i>Mix</a></li>
+                                <li id="note" class="mymenu-item"><a href="noteTemp" onclick="setActiveMenu('note')"><i class="ti ti-minus"></i>Note</a></li>
+                            </ul><!--end submenu-->
+                        </li><!--end has-submenu-->
+
+                        <li class="has-submenu mymenu-item" id="appoinment">
+                            <a href="appoinment" onclick="setActiveMenu('appoinment')">
+                                <span><i class="dripicons-user-group align-self-center hori-menu-icon fs-5"></i>Appointment</span>
+                            </a>
+                        </li><!--end has-submenu-->
+                        <!--end has-submenu-->
+
+                        <li class="has-submenu" id="template">
+                            <a href="#" onclick="setActiveMenu('tools')">
+                                <span><i class="dripicons-store align-self-center hori-menu-icon fs-5"></i>Tools</span>
+                            </a>
+                            <ul class="submenu">
+                                <li id="databaseTool" class="mymenu-item"><a href="databaseTool" onclick="setActiveMenu('databaseTool')"><i class="ti ti-minus"></i>Database</a></li>
+                                <li id="checkUpgrade" class="mymenu-item"><a href="checkUpgrade" onclick="setActiveMenu('checkUpgrade')"><i class="ti ti-minus"></i>Upgrade</a></li>
+                                <li id="drug" class="mymenu-item"><a href="drug" onclick="setActiveMenu('drug')"><i class="ti ti-minus"></i>Drug</a></li>
+                                <li id="dbpath" class="mymenu-item"><a href="dbpath" onclick="setActiveMenu('dbpath')"><i class="ti ti-minus"></i>DB Path</a></li>
+                            </ul><!--end submenu-->
+                        </li><!--end has-submenu-->
+
+                        <li class="has-submenu mymenu-item" id="appoinment">
+                            <a href="developers" onclick="setActiveMenu('developers')">
+                                <span><i class="dripicons-user-group align-self-center hori-menu-icon fs-5"></i> &nbsp;  Developers</span>
+                            </a>
+                        </li><!--end has-submenu-->
+
+
+                    </ul><!-- End navigation menu -->
+                </div> <!-- end navigation -->
+            </div>
+            <!-- Navbar -->
+        </nav>
+        <!-- end navbar-->
+    </div>
+    <!-- Top Bar End -->
+    <div class="page-wrapper" style="width:100% !important">
+        <!-- Page Content-->
+        <div class="page-content">
+            <div class="container-fluid">
+                <!-- Page-Title -->
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box">
+                        </div><!--end page-title-box-->
+                    </div><!--end col-->
+                </div><!--end row-->
+
+                <div class="flex-grow-1 container-p-y">
+                    <div class="status-bar-safe-area"></div>
+
+                    <div id="app">Loading...</div>
+                    <div id="blazor-error-ui">
+                        An unhandled error has occurred.
+                        <a href="" class="reload">Reload</a>
+                        <a class="dismiss">🗙</a>
+                    </div>
+
+                    <script src="_framework/blazor.webview.js" autostart="false"></script>
+
+                    <!-- Course datatable End -->
+                </div>
+            </div><!-- container -->
+        </div>
+        <!-- end page content -->
+    </div>
+    <!-- end page-wrapper -->
+    <footer class="footer text-center text-sm-start">
+        <div class="boxed-footer" style="font-size: 1.1rem; color: #000000;">
+            ©
+            <script>
+                document.write(new Date().getFullYear())
+            </script> Quickmed
+            <span class="d-none d-sm-inline-block float-end" style="font-size: 1.1rem; color: #000000;">
+                Crafted with ❤️ by <a href="https://techstdio.com" target="_blank" class="fw-medium">Tech Stdio</a>
+            </span>
+        </div>
+    </footer>
+    <!-- jQuery  -->
+    <script src="dastheme/js/jquery.min.js"></script>
+    <script src="dastheme/js/bootstrap.bundle.min.js"></script>
+    <script src="dastheme/js/metismenu.min.js"></script>
+    <script src="dastheme/js/waves.js"></script>
+    <script src="dastheme/js/feather.min.js"></script>
+    <script src="dastheme/js/simplebar.min.js"></script>
+    <script src="dastheme/js/moment.js"></script>
+    <script src="dastheme/plugins/daterangepicker/daterangepicker.js"></script>
+
+    <script src="dastheme/plugins/apex-charts/apexcharts.min.js"></script>
+    <script src="dastheme/plugins/jvectormap/jquery-jvectormap-2.0.2.min.js"></script>
+    <script src="dastheme/plugins/jvectormap/jquery-jvectormap-us-aea-en.js"></script>
+    <script src="dastheme/pages/jquery.analytics_dashboard.init.js"></script>
+
+    <!-- Plugins js -->
+
+    <script src="dastheme/plugins/select2/select2.min.js"></script>
+    <script src="dastheme/plugins/huebee/huebee.pkgd.min.js"></script>
+    <script src="dastheme/plugins/timepicker/bootstrap-material-datetimepicker.js"></script>
+    <script src="dastheme/plugins/bootstrap-maxlength/bootstrap-maxlength.min.js"></script>
+    <script src="dastheme/plugins/bootstrap-touchspin/js/jquery.bootstrap-touchspin.min.js"></script>
+
+    <script src="dastheme/pages/jquery.forms-advanced.js"></script>
+
+    <script src="dastheme/plugins/tippy/tippy.all.min.js"></script>
+    <script src="dastheme/plugins/tiny-editable/mindmup-editabletable.js"></script>
+    <script src="dastheme/plugins/tiny-editable/numeric-input-example.js"></script>
+    <script src="dastheme/plugins/bootable/bootstable.js"></script>
+    <script src="dastheme/pages/jquery.tabledit.init.js"></script>
+
+    <!-- Required datatable js -->
+    <script src="dastheme/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="dastheme/plugins/datatables/dataTables.bootstrap5.min.js"></script>
+    <!-- Buttons examples -->
+    <script src="dastheme/plugins/datatables/dataTables.buttons.min.js"></script>
+    <script src="dastheme/plugins/datatables/buttons.bootstrap5.min.js"></script>
+    <script src="dastheme/plugins/datatables/jszip.min.js"></script>
+    <script src="dastheme/plugins/datatables/pdfmake.min.js"></script>
+    <script src="dastheme/plugins/datatables/vfs_fonts.js"></script>
+    <script src="dastheme/plugins/datatables/buttons.html5.min.js"></script>
+    <script src="dastheme/plugins/datatables/buttons.print.min.js"></script>
+    <script src="dastheme/plugins/datatables/buttons.colVis.min.js"></script>
+    <!-- Responsive examples -->
+    <script src="dastheme/plugins/datatables/dataTables.responsive.min.js"></script>
+    <script src="dastheme/plugins/datatables/responsive.bootstrap4.min.js"></script>
+    <script src="dastheme/assets/pages/jquery.datatable.init.js"></script>
+    <script src="dastheme/plugins/dropify/js/dropify.min.js"></script>
+
+    <script src="dastheme/plugins/tinymce/tinymce.min.js"></script>
+    <!-- App js -->
+    <script src="dastheme/js/app.js"></script>
+    <script src="dastheme/js/jquery.core.js"></script>
+    <script src="dastheme/js/jquery-ui.min.js"></script>
+
+    <!--Quickmed Js-->
+    <script src="js/app.js"></script>
+    <script src="js/force.js"></script>
+    <script src="js/alert.js"></script>
+    <script src="js/treatmenttemp.js"></script>
+    <script src="js/sweetalert.min.js"></script>
+    <script src="js/NotesTemp.js"></script>
+    <script src="js/mixTemp.js"></script>
+    <script src="js/favDrug.js"></script>
+    <script src="js/quill.js"></script>
+    <script src="js/quillInterop.js"></script>
+    <script src="js/referTemp.js"></script>
+    <script src="js/prescription.js"></script>
+    <script src="js/avro.js"></script>
+    <script src="js/dragdb.js"></script>
+    <script src="js/PrescriptionList.js"></script>
+    <script src="js/PreviewPres.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!--Avro Js Function-->
+    <script src="js/avro-v1.js"></script>
+
+    
+
+
+</body>
+
+</html>

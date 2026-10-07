@@ -1,0 +1,12 @@
+﻿Specific Table:
+
+Scaffold-DbContext "Server=103.119.101.170;Database=JU;User Id=dream71;Password=d71;TrustServerCertificate=true;Trusted_Connection=false;" Microsoft.EntityFrameworkCore.SqlServer -ContextDir DEMODATA -OutputDir DEMODATA -UseDatabaseNames -Tables Menu_Permission -force
+
+
+
+All Tables:
+
+Scaffold-DbContext "Server=103.119.101.170;Database=JU;User Id=dream71;Password=d71;TrustServerCertificate=true;Trusted_Connection=false;" Microsoft.EntityFrameworkCore.SqlServer -ContextDir DEMODATA -OutputDir DEMODATA -UseDatabaseNames -Force
+
+
+

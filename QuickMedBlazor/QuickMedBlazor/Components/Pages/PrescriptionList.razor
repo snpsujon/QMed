@@ -1,0 +1,239 @@
+﻿@page "/prescriptionList"
+@using C1.Blazor.Grid;
+@using QuickMedBlazor.DB
+@using QuickMedBlazor.ViewModels
+@inject ApplicationDbContext App
+@inject IJSRuntime JSRuntime;
+@using C1.Blazor.Core
+@using C1.Blazor.Input
+@using C1.Blazor.ListView
+@using C1.Blazor.DateTimeEditors
+@using C1.Blazor.Grid
+
+
+
+@* @inject ApplicationDbContext _dp; *@
+<style>
+    .container {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    .form-group {
+        display: inline-flex !important;
+        padding-bottom: 20px;
+    }
+
+        .form-group .popup-content-container {
+            max-height: 300px;
+        }
+
+        .form-group label {
+            justify-content: left;
+            text-align: left;
+            padding-right: 5px;
+        }
+
+    .datepicker {
+        /*display: inline-flex !important;*/
+    }
+
+    .list-view-row {
+        padding: 8px;
+    }
+
+    .c1-numeric-box {
+        height: 38px;
+        border-color: #ced4da;
+    }
+
+    .head-text {
+        font-weight: bold;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+    }
+</style>
+@if (patients.Any())
+{
+   
+   @*  <table class="table">
+        <thead>
+            <tr>
+                <th>Actions</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Address</th>
+                <th>Mobile</th>
+                <th>Code</th>
+                <th>Admission Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var patient in patients)
+            {
+                <tr>
+                    <td>
+                       
+                        <button @onclick="() => ViewPrescription(patient)" class="icon-button" title="Delete">
+                            <span class="icon">📃</span> <!-- Delete icon -->
+                        </button>
+
+                    </td>
+                    <td>@patient.Name</td>
+                    <td>@patient.Age</td>
+                    <td>@(patient.Gender == "1" ? "Male" : patient.Gender == "2" ? "Female" : "Others")</td>
+                    <td>@patient.Address</td>
+                    <td>@patient.Mobile</td>
+                    <td>@patient.Code</td>
+                    <td>@patient.AdmissionDate.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table> *@
+    <div class="d-flex justify-content-between align-items-center">
+        <h3>Prescription List</h3>
+
+        <div class="form-inline  ms-auto">
+            <div class="form-group">
+                <C1TextBox @bind-Text="filterString" Placeholder="Search" Class="form-control" Style="@("height: 38px;")"></C1TextBox>
+            </div>
+        </div>
+    </div>
+
+    <FlexGrid SelectionMode="GridSelectionMode.MultiRange" ItemsSource="patients" AutoGenerateColumns="false" IsReadOnly="true" Style="@("border: 1px solid black;")"
+          DefaultColumnWidth="GridLength.Star" ColumnHeaderStyle="@("background-color:#778898;color:#fff;font-weight:bold")"
+          AlternatingRowStyle="@("background-color:#fff")"
+              RowStyle="@("background-color:#E5E6FA;color:#000")" HorizontalScrollBarVisibility="ScrollBarVisibility.Visible" IsVirtualizationEnabled="true">
+
+    <FlexGridBehaviors>
+        <FullTextFilterBehavior MatchNumbers="true" HighlightStyle="@("color:#3E65FF")" FilterString="@filterString" TreatSpacesAsAndOperator="true"></FullTextFilterBehavior>
+    </FlexGridBehaviors>
+    
+    <FlexGridColumns>
+            <GridColumn Header="Action" HorizontalAlignment="C1.Blazor.Core.C1HorizontalAlignment.Center">
+                <CellTemplate>
+                    @{
+                        var item = (PerviewPresVM)context;
+
+                    }
+                    <button @onclick="() => ViewPrescription(item)" style="font-weight:700; color:#000" title="Preview">
+                        <span class="icon">👁️</span>
+                    </button>
+                </CellTemplate>
+            </GridColumn>
+        <GridColumn Header="Name" Binding="Name" HorizontalAlignment="C1HorizontalAlignment.Center" HeaderHorizontalAlignment="C1HorizontalAlignment.Center" />
+        <GridColumn Header="Age" Binding="Age" HorizontalAlignment="C1HorizontalAlignment.Center" HeaderHorizontalAlignment="C1HorizontalAlignment.Center" />
+        <GridColumn Header="Gender" Binding="Gender" HorizontalAlignment="C1HorizontalAlignment.Center" HeaderHorizontalAlignment="C1HorizontalAlignment.Center" />
+        <GridColumn Header="Mobile" Binding="Mobile" HorizontalAlignment="C1HorizontalAlignment.Center" HeaderHorizontalAlignment="C1HorizontalAlignment.Center" />
+            <GridColumn Header="Reg.No" Binding="PrescriptionCode" HorizontalAlignment="C1HorizontalAlignment.Center" HeaderHorizontalAlignment="C1HorizontalAlignment.Center" />
+        <GridColumn Header="Prescription Date" Binding="PrescriptionDate" Format="g" HorizontalAlignment="C1HorizontalAlignment.Center" HeaderHorizontalAlignment="C1HorizontalAlignment.Center" />
+            
+
+             <!-- Action column with a clickable placeholder -->
+       <!-- Action column with a button -->
+      @*   <GridColumn Header="Action" HorizontalAlignment="C1HorizontalAlignment.Center">
+            <Template>
+                    @{
+                        // Define the unique ID for the row
+                        var patientId = ((PerviewPresVM)patients).Id;
+                    }
+                    <button @onclick="@(args => ViewPrescription(args,patients.FirstOrDefault(p => p.Id == patientId)))" class="btn btn-primary">View</button>
+            </Template>
+        </GridColumn> *@
+
+
+
+    </FlexGridColumns>
+</FlexGrid>
+
+
+
+
+
+}
+else
+{
+    <p><em>No Data Available</em></p>
+}
+<PreviewPers @ref="modal" IsVisible="@showModal" IsVisibleChanged="@((value) => CloseModal())">
+</PreviewPers>
+
+@code {
+    string filterString;
+    private PreviewPers modal;
+    private bool showModal = false;
+
+    private IEnumerable<PerviewPresVM> patients = new List<PerviewPresVM>();
+    private TblPatient model = new();
+
+    // private IEnumerable<TblDoctor> doct = new List<TblDoctor>();
+
+
+
+    private async Task CloseModal()
+    {
+        // await JS.InvokeVoidAsync("destroyQuill", "#editors"); // Destroy the editor instance and clear content
+        showModal = false; // Close the modal
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // doct = await App.ExecuteSqlQueryAsync<TblDoctor>("SELECT * FROM TblDoctor ORDER BY Id DESC LIMIT 1;");
+
+        // var Lk = doct.FirstOrDefault().LicenseKey;
+
+        patients = await App.ExecuteSqlQueryAsync<PerviewPresVM>("select p.Id,t.Address,p.NumberAfter, t.Mobile,  p.Dx, p.OE, p.Ix, p.Advice, p.CC, p.ISDayAfter, p.ISMonthAfter,  t.Name, t.Age, T.Mobile,p.PrescriptionCode,p.PrescriptionDate, p.PrescriptionDetails, CASE WHEN t.Gender=1 THEN 'M' WHEN t.Gender=2 THEN 'F' ELSE 'O'  END AS Gender  from TblPrescription  p  left join TblPatient t on p.PatientId = t.Id order by t.Code desc");
+
+    }
+
+    private void EditPatient(PerviewPresVM patient)
+    {
+
+    }
+
+    private async void DeletePatient(PerviewPresVM patient)
+    {
+        bool isConfirmed = await JSRuntime.InvokeAsync<bool>("showDeleteConfirmation", "Delete", "Are you sure you want to delete this record?");
+
+        if (isConfirmed)
+        {
+            var sql = $"Delete from TblPrescription where Id = '{patient.Id}'";
+            var deleteResult = await App.ExecuteSqlQueryAsync<PerviewPresVM>(sql);
+            await OnInitializedAsync();
+            StateHasChanged();
+
+        }
+    }
+
+
+    public async void ViewPrescription(PerviewPresVM patient)
+    {
+       
+        showModal = true;
+            modal.previewData = patient;
+            var sql = "Select * from TblDoctor LIMIT 1;";
+            modal.previewData.TblDoctor = new TblDoctor();
+            var Doctor =await App.ExecuteSqlQueryAsync<TblDoctor>(sql);
+            if (Doctor.Any())
+            {
+                modal.previewData.TblDoctor = Doctor.First();
+            }
+
+    }
+
+    // public async void ViewPrescriptions(PerviewPresVM patient)
+    // {
+    //     showModal = true;
+    //     modal.previewData = patient;
+    //     var sql = "Select * from TblDoctor LIMIT 1;";
+    //     modal.previewData.TblDoctor = new TblDoctor();
+    //     var Doctor = App.ExecuteSqlQueryAsync<TblDoctor>(sql);
+    //     if (Doctor.Any())
+    //     {
+    //         modal.previewData.TblDoctor = Doctor.First();
+    //     }
+    // }
+
+}

@@ -1,0 +1,161 @@
+﻿@inherits LayoutComponentBase
+
+@using QuickMedBlazor.DB
+@using QuickMedBlazor.Services
+@inject ApplicationDbContext _dp;
+@inject DataSyncService ds
+
+<div class="page">
+    <main>
+        @if (isLicenseValid==2)
+        {
+            <article class="content px-4">
+                <QuickMedBlazor.Components.Pages.License></QuickMedBlazor.Components.Pages.License>
+            </article>
+        }
+        else if(isLicenseValid == 0)
+        {
+        }
+        else
+        {
+            <style>
+                /* General styling for the navbar links */
+                .nav-link {
+                    color: #007bff;
+                    text-decoration: none;
+                    padding: 10px;
+                    font-size: 16px;
+                }
+
+                    /* Styling for the active link */
+                    .nav-link.active {
+                        color: #0056b3;
+                        font-weight: bold;
+                        border-bottom: 2px solid #0056b3;
+                    }
+
+                    /* Hover effect for nav links */
+                    .nav-link:hover {
+                        color: #0056b3;
+                        text-decoration: underline;
+                    }
+
+
+            </style>
+            <!-- Top Navbar aligned to the left -->
+            <div class="top-row px-4 navbar">
+                <NavLink class="nav-link" href="pp" ActiveClass="active" id="initnavlink">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Prescription
+                </NavLink>
+                <NavLink class="nav-link" href="prescriptionList" ActiveClass="active">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> View Prescription
+                </NavLink>
+                <NavLink class="nav-link" href="Appoinment" ActiveClass="active">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Appointment
+                </NavLink>
+                <NavLink class="nav-link" href="TreatmentTemplate" ActiveClass="active">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Treatment Template
+                </NavLink>
+                <NavLink class="nav-link" href="DatabaseTool" ActiveClass="active">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Database Tool
+                </NavLink>
+                <NavLink class="nav-link" href="checkUpgrade" ActiveClass="active">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Check Upgrade
+                </NavLink>
+                <NavLink class="nav-link" href="Drug" ActiveClass="active">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Drug
+                </NavLink>
+
+            </div>
+
+
+
+            <article class="content px-4">
+                @Body
+
+            </article>
+
+        }
+    </main>
+</div>
+
+@code {
+    private int isLicenseValid=0;
+
+    private List<TblLicenseInfo> tblLicenses = new();
+    private TblLicenseInfo model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLicenseValid = 1;
+            // tblLicenses = new();
+            // tblLicenses = await App.Database.GetTableRowsAsync<TblLicenseInfo>("TblLicenseInfo");
+            // if (tblLicenses.Count() != 0)
+            // {
+            //     if (tblLicenses.First().ExpirationDate >= DateTime.Now)
+            //     {
+
+
+            //         if (await ds.IsConnectedToInternet())
+            //         {
+            //             var handler = new HttpClientHandler();
+            //             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // This ignores all certificate validation errors
+            //             var client = new HttpClient(handler);
+            //             var modl = new { LicenseKey = tblLicenses.First().LicenseKey };
+            //             var response = await client.PostAsJsonAsync("https://quickmed.snpsujon.me/api/Licence/CheckValidity", modl);
+
+
+            //             if (response.IsSuccessStatusCode)
+            //             {
+            //                 var licenseResponse = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+            //                 if (licenseResponse.Data != null)
+            //                 {
+            //                     if (licenseResponse.Data.IsValid == 1)
+            //                     {
+            //                         isLicenseValid = 1;
+            //                     }
+            //                     else
+            //                     {
+            //                         isLicenseValid = 2;
+                                    
+            //                     }
+            //                 }
+            //                 else
+            //                 {
+            //                     isLicenseValid = 2;
+                                
+            //                 }
+            //             }
+            //             else
+            //             {
+            //                 isLicenseValid = 2;
+                            
+            //             }
+
+
+
+            //         }
+            //         else
+            //         {
+            //             isLicenseValid = 1;
+            //         }
+            //         // isLicenseValid = true;
+            //     }
+            //     else
+            //     {
+            //         isLicenseValid = 2;
+            //     }
+            // }
+            // else
+            // {
+            //     isLicenseValid = 2;
+            // }
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+}

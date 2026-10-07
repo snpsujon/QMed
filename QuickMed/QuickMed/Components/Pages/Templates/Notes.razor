@@ -1,0 +1,175 @@
+﻿@page "/noteTemp"
+@using QuickMed.BaseComponent
+@inherits BaseNotesTemp
+
+@*<h4 class="text-success"> <i class="dripicons-document"></i> &nbsp;&nbsp;  Note Form</h4>*@
+<div class="col-lg-12">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title  text-light fw-bold">
+                            <i class="dripicons-information"></i>&nbsp;&nbsp;Note Form
+                        </h4>
+                    </div>
+                    <div style="min-width: 500px;">
+                        <select class="select2W  form-control custom-select" aria-label="Default select example" id="notesTempSelect" >
+                            <option selected disabled>Select Template</option>
+                            @if (noteTemps != null && noteTemps.Any())
+                            {
+                                @foreach (var item in noteTemps)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-header">
+                    <div class="row mb-2 bg-light py-3">
+                        <div class="col-sm-12 d-flex">
+                            <label for="example-text-input" class="col-sm-1 form-label  mb-lg-0 me-3 fw-bold">Template Name  </label>
+                            <div class="col-sm-4">
+                                <input class="form-control form-control-sm border-dark" type="text" id="TempName" @bind-value=noteTemp.Name>
+                            </div>
+
+                        </div>
+                    </div>
+                    <hr style="border-top: 1px dashed red;" />
+@*                     <div class="row">
+                        <div class="col-sm-3">
+                            <select class="select2 form-control mb-3 custom-select" aria-label="Default select example">
+                                <option selected disabled>Select Notes</option>
+                                <option value="1">M</option>
+                                <option value="2">F</option>
+                                <option value="3">O</option>
+                            </select>
+                        </div>
+                    </div> *@
+                </div>
+                <!--end card-header-->
+                <div class="card-body">
+                    <!-- <button class="btn  btn-primary btn-sm mb-3" id="submit_data">Submit</button> -->
+                   @*  <div class="table-responsive">
+                        <table class="table  table-bordered table-sm" id="makeEditable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>fucker1</td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div> *@
+                    <div class="table-responsive">
+                        <table class="table   table-bordered table-sm" id="notesMainTbl">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr name="bogichogi">
+                                    <td>
+                                    </td>
+                                    <td class="text-center text-blue">No data Available</td>
+                                    <td name="buttons" class="text-center text-blue"></td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <span class="float-right">
+                        <button id="add_new_notes" class="btn btn-primary btn-sm">Add New Row</button>
+                    </span><!--end table-->
+
+
+                    <hr />
+                    <span class="float-right">
+                        <button id="but_add" class="btn btn-success btn-sm float-end" @onclick="OnSaveBtnClick">Save</button>
+                    </span>
+
+                </div><!--end card-body-->
+            </div><!--end card-->
+        </div> <!-- end col -->
+
+
+    </div> <!-- end row -->
+
+
+</div><!--end col-->
+
+@*<h4 class="text-primary"> <i class="dripicons-view-list"></i> &nbsp;&nbsp;  Note List</h4>*@
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info ">
+                <h4 class="card-title text-light"> <i class="dripicons-view-list"></i> &nbsp;&nbsp;Note List</h4>
+            </div><!--end card-header-->
+           @*  <div class="card-body">
+                <table id="datatable-noteTemp" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class="border-top-0">Name</th>
+                            <th class="border-top-0">Value</th>
+                            <th class="border-top-0 text-end">Action</th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+                        @if (mixTemps != null && mixTemps.Any())
+                        {
+                            @foreach (var item in mixTemps.Select((value, index) => new { value, index }))
+                            {
+                                <tr>
+                                    <td>@(item.index + 1)</td> <!-- Display serial number (index + 1) -->
+                                    <td>@item.value.Name</td>
+
+
+                                    <td class="text-end">
+                                        <span class="text-primary mx-1 cursor-pointer" @onclick="() => OnEditClick(item.value)"><i class="dripicons-pencil"></i></span>
+                                        <span class="text-danger mx-1 cursor-pointer" @onclick="() => OnDeleteClick(item.value.Id)"><i class="dripicons-trash"></i></span>
+                                    </td>
+
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                </table>
+            </div> *@
+            <div class="card-body">
+                <table id="datatable-noteTemp" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class="border-top-0">#</th>
+                            <th class="border-top-0">Name</th>
+                            <th class="border-top-0 text-end">Action</th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> <!-- end col -->
+</div> <!-- end row -->
+
+
+

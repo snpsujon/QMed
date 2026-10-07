@@ -1,0 +1,151 @@
+﻿@page "/drugTemp"
+@using QuickMed.BaseComponent
+@inherits BaseFavouriteDrugTemp
+
+@*<h4 class="text-success"> <i class="dripicons-document"></i> &nbsp;&nbsp;  Drug / Favourite Form</h4>*@
+<div class="col-lg-12">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info ">
+                    <h4 class="card-title text-light"> <i class="dripicons-information"></i> &nbsp;&nbsp;Drug / Favourite Form</h4>
+                </div><!--end card-header-->
+
+                <div class="card-header">
+                    <div class="row mb-2 bg-light py-3">
+                        <div class="col-sm-12 d-flex">
+                            <label for="example-text-input" class="col-sm-1 form-label  mb-lg-0 me-3 fw-bold">Template Name  </label>
+                            <div class="col-sm-4">
+                                <input class="form-control form-control-sm border-dark" type="text" id="TempName" @bind-value="drugTemp.Name">
+                            </div>
+
+                        </div>
+                    </div>
+                    <hr style="border-top: 1px dashed red;" />
+                </div>
+
+
+                <input type="text" id="favTempId" value="NewCreated" hidden />
+
+
+
+                <!--end card-header-->
+                <div class="card-body">
+                    <div class="row mb-5">
+                        <div class="col-sm-3">
+                            <select class="select2C form-control mb-3 custom-select" id="brandSelect" aria-label="Default select example" style="appearance: none;">
+                                <option selected value="0" disabled>Select Brand</option>
+                                @foreach (var item in Brands)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <select class="select2W form-control mb-3 custom-select" id="doseSelect" aria-label="Default select example">
+                                <option selected value="0" disabled>Select Dose</option>
+                                @foreach (var item in Dose)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <select class="select2W form-control mb-3 custom-select" id="instructionSelect" aria-label="Default select example">
+                                <option selected value="0" disabled>Select Instruction</option>
+                                @foreach (var item in Instructions)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <select class="select2W  form-control custom-select" aria-label="Default select example" id="durationSelectfav">
+                                <option selected disabled>Select Duration</option>
+                                @if (Duration != null && Duration.Any())
+                                {
+                                    @foreach (var item in Duration)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+
+                                }
+                            </select>
+
+                        </div>
+                    </div>
+                    <span class="float-right">
+                        @*<button id="but_add" class="btn btn-success btn-sm float-end" @onclick="OnSaveBtnClick">Save</button>*@
+                        <button id="saveBtn" @onclick="OnSaveBtnClick" class="btn btn-success btn-sm float-end" style="display:block">Save</button>
+                        <button @onclick="UpdateTemplate" class="btn btn-info btn-sm float-end m-2" id="updateBtn" style="display:none">Update</button>
+                        <button @onclick="CancelTemplate" class="btn btn-danger btn-sm float-end m-2" id="cancelBtn" style="display:none">Cancel</button>
+                    </span>
+
+                </div><!--end card-body-->
+            </div><!--end card-->
+        </div> <!-- end col -->
+
+
+    </div> <!-- end row -->
+
+
+</div><!--end col-->
+
+
+@*<h4 class="text-primary"> <i class="dripicons-view-list"></i> &nbsp;&nbsp;  Drug / Favourite List</h4>*@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info ">
+                <h4 class="card-title text-light"> <i class="dripicons-view-list"></i> &nbsp;&nbsp;Drug / Favourite List</h4>
+            </div><!--end card-header-->
+            <div class="card-body">
+                <!--<table id="datatable-doseTemp" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class="border-top-0">Name</th>
+                            <th class="border-top-0">Brand</th>
+                            <th class="border-top-0">Dose</th>
+                            <th class="border-top-0">Instruction</th>
+                            <th class="border-top-0">Duration</th>
+                            <th class="border-top-0 text-end">Action</th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+                        <tr>
+                            <td>2C</td>
+                            <td>2C</td>
+                            <td>2C</td>
+                            <td>2C</td>
+                            <td>2C</td>
+                            <td class="text-end"> <i class="dripicons-pencil btn btn-soft-primary"></i><i class="dripicons-trash btn btn-soft-danger"></i></td>
+                        </tr>--><!--end tr-->
+
+
+
+                    <!--</tbody>
+                </table>-->
+
+                <table id="datatable-favouriteTemp" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class="border-top-0">#</th>
+                            <th class="border-top-0">Name</th>
+                            <th class="border-top-0">Brand</th>
+                            <th class="border-top-0">Dose</th>
+                            <th class="border-top-0">Instruction</th>
+                            <th class="border-top-0">Duration</th>
+                            <th class="border-top-0 text-end">Action</th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> <!-- end col -->
+</div> <!-- end row -->
